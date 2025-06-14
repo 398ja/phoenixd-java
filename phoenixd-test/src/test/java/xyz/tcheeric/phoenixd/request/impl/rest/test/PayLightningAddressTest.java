@@ -1,7 +1,7 @@
 package xyz.tcheeric.phoenixd.request.impl.rest.test;
 
 import org.junit.jupiter.api.Test;
-import xyz.tcheeric.common.config.Configuration;
+import xyz.tcheeric.common.util.Configuration;
 import xyz.tcheeric.phoenixd.model.response.PayLightningAddressInvoiceResponse;
 import xyz.tcheeric.phoenixd.model.param.PayLightningAddressParam;
 import xyz.tcheeric.phoenixd.operation.impl.PostOperation;
@@ -14,7 +14,7 @@ public class PayLightningAddressTest {
     @Test
     public void testConstructor() {
         // Arrange
-        Configuration configuration = new Configuration("test");
+        Configuration configuration = new Configuration("test", getClass().getResource("/app.properties"));
         PayLightningAddressParam payLightningAddressParam = new PayLightningAddressParam();
         payLightningAddressParam.setAddress(configuration.get("pay_lnaddress"));
         payLightningAddressParam.setMessage("test message: testConstructor" + System.currentTimeMillis());
