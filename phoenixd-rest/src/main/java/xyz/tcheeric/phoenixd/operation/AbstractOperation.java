@@ -3,9 +3,9 @@ package xyz.tcheeric.phoenixd.operation;
 import lombok.Data;
 import lombok.NonNull;
 import lombok.SneakyThrows;
-import xyz.tcheeric.common.config.Configuration;
 import xyz.tcheeric.common.rest.Operation;
 import xyz.tcheeric.common.rest.Request;
+import xyz.tcheeric.common.util.Configuration;
 import xyz.tcheeric.phoenixd.operation.impl.PostOperation;
 
 import java.io.IOException;
@@ -30,7 +30,7 @@ public abstract class AbstractOperation implements Operation {
     private String responseBody;
     private String requestData;
 
-    private Configuration configuration = new Configuration("phoenixd");
+    private Configuration configuration = new Configuration("phoenixd", getClass().getResource("/app.properties"));
 
     public AbstractOperation(@NonNull HttpRequest httpRequest) {
         this.httpRequest = httpRequest;
