@@ -3,7 +3,7 @@ package xyz.tcheeric.phoenixd.model.response;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import xyz.tcheeric.common.rest.Response;
+import xyz.tcheeric.phoenixd.common.Response;
 
 import java.util.List;
 

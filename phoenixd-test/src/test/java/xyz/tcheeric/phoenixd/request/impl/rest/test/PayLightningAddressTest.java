@@ -1,9 +1,9 @@
 package xyz.tcheeric.phoenixd.request.impl.rest.test;
 
 import org.junit.jupiter.api.Test;
-import xyz.tcheeric.common.util.Configuration;
-import xyz.tcheeric.phoenixd.model.response.PayLightningAddressInvoiceResponse;
+import xyz.tcheeric.phoenixd.common.Configuration;
 import xyz.tcheeric.phoenixd.model.param.PayLightningAddressParam;
+import xyz.tcheeric.phoenixd.model.response.PayLightningAddressInvoiceResponse;
 import xyz.tcheeric.phoenixd.operation.impl.PostOperation;
 import xyz.tcheeric.phoenixd.request.impl.rest.PayLightningAddressRequest;
 

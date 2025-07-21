@@ -3,9 +3,9 @@ package xyz.tcheeric.phoenixd.operation;
 import lombok.Data;
 import lombok.NonNull;
 import lombok.SneakyThrows;
-import xyz.tcheeric.common.rest.Operation;
-import xyz.tcheeric.common.rest.Request;
-import xyz.tcheeric.common.util.Configuration;
+import xyz.tcheeric.phoenixd.common.Configuration;
+import xyz.tcheeric.phoenixd.common.Operation;
+import xyz.tcheeric.phoenixd.common.Request;
 import xyz.tcheeric.phoenixd.operation.impl.PostOperation;
 
 import java.io.IOException;
@@ -71,7 +71,7 @@ public abstract class AbstractOperation implements Operation {
 
         HttpRequest.BodyPublisher bodyPublisher = requestData == null ? HttpRequest.BodyPublishers.noBody() : HttpRequest.BodyPublishers.ofString(requestData);
 
-        var separator = param.getKind() == Request.Param.Kind.PATH ? "/" : "?";
+        String separator = param.getKind() == Request.Param.Kind.PATH ? "/" : "?";
         this.httpRequest = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + replacePathVariables(path, param) + separator + param))
                 .header("Authorization", "Basic " + encodedAuth)

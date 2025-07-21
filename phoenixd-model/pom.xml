@@ -32,8 +32,9 @@
             <version>6.2.0</version>
         </dependency>
         <dependency>
-            <groupId>xyz.tcheeric</groupId>
-            <artifactId>tcheeric-common-rest</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>phoenix-common</artifactId>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 
