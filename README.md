@@ -1,26 +1,44 @@
 # phoenixd-java
 
-This is a Java wrapper for ACINQ's [phoenixd REST API](https://phoenix.acinq.co/server/api).
+A simple Java client for ACINQ's [phoenixd REST API](https://phoenix.acinq.co/server/api). It wraps the HTTP endpoints and exposes typed requests and responses.
 
 ## Requirements
 - Java 21
-- Maven 
-- A running instance of phoenixd
-- A valid Lightning address (for testing purpose only. See below)
+- Maven
+- A running instance of `phoenixd`
+- A valid Lightning address (for test runs)
+
+## Building
+Clone the repository and run the Maven build:
+
+```bash
+mvn clean install
+```
+
+This will compile all modules and execute the unit tests. The tests expect a `phoenixd` instance running locally and some configuration values defined in `phoenixd-test/src/test/resources/app.properties`.
+
+Before running the tests, update the `test.pay_lnaddress` entry in that file so it targets a Lightning address that you control.
+
+## Usage example
+```java
+Configuration cfg = new Configuration("phoenixd");
+CreateInvoiceParam param = new CreateInvoiceParam();
+param.setAmountSat(100);
+CreateBolt11InvoiceRequest req = new CreateBolt11InvoiceRequest(param);
+CreateInvoiceResponse resp = req.getResponse();
+```
 
 ## Contributing
-Currently, only a minimal subset of the endpoints are implemented. If you would like to contribute to this project, please feel free to fork the repository and submit a pull request on the `develop` branch.
-To implement a new endpoint, you just need to create three classes:
-1. A request parameter class that extends `Request.Param` (in the `phoenixd-model` module)
-2. A response class that implements the `Response` interface (in the `phoenixd-model` module)
-3. The actual endpoint request sub-class (in the `phoenixd-rest` module)
-4. The corresponding unit tests (in the `phoenixd-test` module)
+Only a small subset of endpoints is implemented at the moment. Contributions are welcome! To add a new one you typically create:
+1. A request parameter class extending `Request.Param` (in `phoenixd-model`)
+2. A response class implementing `Response` (in `phoenixd-model`)
+3. The request class itself (in `phoenixd-rest`)
+4. Corresponding unit tests (in `phoenixd-test`)
 
 ### Supported endpoints
-- /createinvoice
-- /decodeinvoice
-- /getlnaddress
-- /payinvoice
-- /paylnaddress
+- `/createinvoice`
+- `/decodeinvoice`
+- `/getlnaddress`
+- `/payinvoice`
+- `/paylnaddress`
 
-**IMPORTANT**: Please make sure to *change* the `test.pay_lnaddress` property in the `app.properties` file of the `phoenixd-test` module to a valid Lightning address that *you control* **before** running the tests.
