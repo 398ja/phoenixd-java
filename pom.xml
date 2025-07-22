@@ -10,7 +10,6 @@
         <module>phoenixd-model</module>
         <module>phoenixd-rest</module>
         <module>phoenixd-test</module>
-        <module>phoenix-common</module>
     </modules>
 
     <properties>
@@ -41,9 +40,14 @@
         <dependencies>
             <!-- Annotation Dependencies -->
             <dependency>
-                <groupId>org.projectlombok</groupId>
-                <artifactId>lombok</artifactId>
-                <version>${lombok.version}</version>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>tcheeric-common-rest</artifactId>
+                <version>1.0-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>tcheeric-common-util</artifactId>
+                <version>1.0-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>

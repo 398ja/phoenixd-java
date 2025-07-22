@@ -3,7 +3,7 @@ package xyz.tcheeric.phoenixd.model.response;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import xyz.tcheeric.phoenixd.common.Response;
+import xyz.tcheeric.common.rest.Response;
 
 @Data
 @AllArgsConstructor

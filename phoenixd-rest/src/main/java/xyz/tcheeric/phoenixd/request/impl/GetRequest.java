@@ -2,8 +2,8 @@ package xyz.tcheeric.phoenixd.request.impl;
 
 import lombok.Getter;
 import lombok.NonNull;
-import xyz.tcheeric.phoenixd.common.Request;
-import xyz.tcheeric.phoenixd.common.Response;
+import xyz.tcheeric.common.rest.Request;
+import xyz.tcheeric.common.rest.Response;
 import xyz.tcheeric.phoenixd.operation.impl.GetOperation;
 import xyz.tcheeric.phoenixd.request.AbstractRequest;
 

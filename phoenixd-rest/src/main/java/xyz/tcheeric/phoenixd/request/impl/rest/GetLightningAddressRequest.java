@@ -1,6 +1,6 @@
 package xyz.tcheeric.phoenixd.request.impl.rest;
 
-import xyz.tcheeric.phoenixd.common.VoidRequestParam;
+import xyz.tcheeric.common.rest.VoidRequestParam;
 import xyz.tcheeric.phoenixd.model.response.GetLightningAddressResponse;
 import xyz.tcheeric.phoenixd.request.impl.GetRequest;
 
