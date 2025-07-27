@@ -14,7 +14,7 @@ public class GetRequest<T extends Request.Param, U extends Response> extends Abs
         super(path, null, new GetOperation(path));
     }
 
-    public GetRequest(@NonNull String path, @NonNull Param param) {
+    public GetRequest(@NonNull String path, @NonNull T param) {
         super(path, param, new GetOperation(path, param));
     }
 

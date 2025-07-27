@@ -1,19 +1,22 @@
 package xyz.tcheeric.phoenixd.request.impl.rest.test;
 
-import lombok.SneakyThrows;
-import lombok.extern.java.Log;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import xyz.tcheeric.phoenixd.test.LocalTestServerExtension;
 import xyz.tcheeric.phoenixd.model.param.CreateInvoiceParam;
 import xyz.tcheeric.phoenixd.model.response.CreateInvoiceResponse;
 import xyz.tcheeric.phoenixd.request.impl.rest.CreateBolt11InvoiceRequest;
 
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@Log
+@ExtendWith(LocalTestServerExtension.class)
 public class CreateBolt11InvoiceRequestTest {
+
+    private static final Logger log = Logger.getLogger(CreateBolt11InvoiceRequestTest.class.getName());
 
     @Test
     public void testConstructor() {
@@ -36,9 +39,8 @@ public class CreateBolt11InvoiceRequestTest {
         assertEquals("value", createBolt11InvoiceRequest.getOperation().getHeader("key"));
     }
 
-    @SneakyThrows
     @Test
-    public void testGetResponse() {
+    public void testGetResponse() throws Exception {
         // Arrange
         CreateInvoiceParam param = new CreateInvoiceParam();
         param.setAmountSat(10);

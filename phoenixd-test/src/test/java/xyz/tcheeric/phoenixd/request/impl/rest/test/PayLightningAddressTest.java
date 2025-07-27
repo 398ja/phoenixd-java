@@ -1,14 +1,17 @@
 package xyz.tcheeric.phoenixd.request.impl.rest.test;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import xyz.tcheeric.common.util.Configuration;
 import xyz.tcheeric.phoenixd.model.param.PayLightningAddressParam;
 import xyz.tcheeric.phoenixd.model.response.PayLightningAddressInvoiceResponse;
 import xyz.tcheeric.phoenixd.operation.impl.PostOperation;
 import xyz.tcheeric.phoenixd.request.impl.rest.PayLightningAddressRequest;
+import xyz.tcheeric.phoenixd.test.LocalTestServerExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@ExtendWith(LocalTestServerExtension.class)
 public class PayLightningAddressTest {
 
     @Test

@@ -1,12 +1,15 @@
 package xyz.tcheeric.phoenixd.request.impl.rest.test;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import xyz.tcheeric.phoenixd.model.param.PayBolt11InvoiceParam;
 import xyz.tcheeric.phoenixd.operation.impl.PostOperation;
 import xyz.tcheeric.phoenixd.request.impl.rest.PayBolt11InvoiceRequest;
+import xyz.tcheeric.phoenixd.test.LocalTestServerExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@ExtendWith(LocalTestServerExtension.class)
 public class PayBolt11InvoiceRequestTest {
 
     @Test
