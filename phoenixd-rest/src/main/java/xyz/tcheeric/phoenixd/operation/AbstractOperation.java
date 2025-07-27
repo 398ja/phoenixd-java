@@ -128,7 +128,7 @@ public abstract class AbstractOperation implements Operation {
         return httpRequest.headers().firstValue(key).orElse(null);
     }
 
-    protected String replacePathVariables(String path, Request.Param param) {
+    public String replacePathVariables(String path, Request.Param param) {
         return path;
     }
 }

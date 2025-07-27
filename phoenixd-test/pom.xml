@@ -18,6 +18,12 @@
     </properties>
 
     <dependencies>
+        <!-- Annotation Dependencies -->
+        <dependency>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
+            <version>1.9.4</version> <!-- Use the latest stable version -->
+        </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>phoenixd-rest</artifactId>
