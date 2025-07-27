@@ -16,7 +16,7 @@ import java.lang.reflect.ParameterizedType;
 @RequiredArgsConstructor
 public abstract class AbstractRequest<T extends Request.Param, U extends Response> implements Request<T, U> {
     private final String path;
-    private final Param param;
+    private final T param;
     private final Operation operation;
 
     @SneakyThrows

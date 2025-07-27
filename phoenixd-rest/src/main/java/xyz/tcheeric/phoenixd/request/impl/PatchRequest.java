@@ -14,7 +14,7 @@ public class PatchRequest<T extends Request.Param, U extends Response> extends A
         super(path, null, new PatchOperation(path));
     }
 
-    public PatchRequest(@NonNull String path, @NonNull Param param) {
+    public PatchRequest(@NonNull String path, @NonNull T param) {
         super(path, param, new PatchOperation(path, param));
     }
 }

@@ -12,7 +12,7 @@ public class DeleteRequest<T extends Request.Param, U extends Response> extends 
         super(path, null, new DeleteOperation(path));
     }
 
-    public DeleteRequest(String path, Param param) {
+    public DeleteRequest(String path, T param) {
         super(path, param, new DeleteOperation(path, param));
     }
     
