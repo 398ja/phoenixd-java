@@ -19,6 +19,9 @@ This will compile all modules and execute the unit tests. The tests expect a `ph
 
 Before running the tests, update the `test.pay_lnaddress` entry in that file so it targets a Lightning address that you control.
 
+## Code coverage
+Running `mvn clean verify` generates a Jacoco coverage report. The aggregated HTML report is written to `target/site/jacoco-aggregate/index.html`.
+
 ## Usage example
 ```java
 Configuration cfg = new Configuration("phoenixd");
