@@ -17,7 +17,17 @@ mvn clean install
 
 This will compile all modules and execute the unit tests. The tests expect a `phoenixd` instance running locally and some configuration values defined in `phoenixd-test/src/test/resources/app.properties`.
 
+
 Before running the tests, update the `test.pay_lnaddress` entry in that file so it targets a Lightning address that you control.
+
+## Testing
+Run the full test suite from the repository root:
+
+```bash
+mvn -q verify
+```
+
+This command executes unit and integration tests for all modules.
 
 ## Code coverage
 Running `mvn clean verify` generates a Jacoco coverage report. The aggregated HTML report is written to `target/site/jacoco-aggregate/index.html`.
