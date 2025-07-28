@@ -2,7 +2,7 @@ package xyz.tcheeric.phoenixd.model.param;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import xyz.tcheeric.common.rest.Request;
+import xyz.tcheeric.phoenixd.common.rest.Request;
 
 @Data
 @NoArgsConstructor

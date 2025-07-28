@@ -2,8 +2,8 @@ package xyz.tcheeric.phoenixd.operation.impl;
 
 import lombok.NonNull;
 import lombok.SneakyThrows;
-import xyz.tcheeric.common.rest.Request;
-import xyz.tcheeric.common.rest.util.Constants;
+import xyz.tcheeric.phoenixd.common.rest.Request;
+import xyz.tcheeric.phoenixd.common.rest.util.Constants;
 import xyz.tcheeric.phoenixd.operation.AbstractOperation;
 
 import java.net.http.HttpRequest;

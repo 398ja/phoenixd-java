@@ -4,10 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import xyz.tcheeric.common.rest.Operation;
-import xyz.tcheeric.common.rest.Request;
-import xyz.tcheeric.common.rest.Response;
-import xyz.tcheeric.common.rest.VoidResponse;
+import xyz.tcheeric.phoenixd.common.rest.Operation;
+import xyz.tcheeric.phoenixd.common.rest.Request;
+import xyz.tcheeric.phoenixd.common.rest.Response;
+import xyz.tcheeric.phoenixd.common.rest.VoidResponse;
 import xyz.tcheeric.phoenixd.model.response.GetLightningAddressResponse;
 
 import java.lang.reflect.ParameterizedType;

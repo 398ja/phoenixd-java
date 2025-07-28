@@ -3,10 +3,12 @@ package xyz.tcheeric.phoenixd.operation;
 import lombok.Data;
 import lombok.NonNull;
 import lombok.SneakyThrows;
-import xyz.tcheeric.common.rest.Operation;
-import xyz.tcheeric.common.rest.Request;
-import xyz.tcheeric.common.util.Configuration;
+import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.commons.configuration2.builder.fluent.Configurations;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import xyz.tcheeric.phoenixd.operation.impl.PostOperation;
+import xyz.tcheeric.phoenixd.common.rest.Operation;
+import xyz.tcheeric.phoenixd.common.rest.Request;
 
 import java.io.IOException;
 import java.net.URI;
@@ -30,7 +32,15 @@ public abstract class AbstractOperation implements Operation {
     private String responseBody;
     private String requestData;
 
-    private Configuration configuration = new Configuration("phoenixd", getClass().getResource("/app.properties"));
+    private static PropertiesConfiguration properties;
+
+    static {
+        try {
+            properties = new Configurations().properties(AbstractOperation.class.getResource("/app.properties"));
+        } catch (ConfigurationException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public AbstractOperation(@NonNull HttpRequest httpRequest) {
         this.httpRequest = httpRequest;
@@ -38,10 +48,10 @@ public abstract class AbstractOperation implements Operation {
 
     @SneakyThrows
     public AbstractOperation(@NonNull String method, @NonNull String path, String requestData) {
-        String username = configuration.get("username");
-        String password = configuration.get("password");
-        String baseUrl = configuration.get("base_url");
-        long timeout = Long.valueOf(configuration.get("timeout"));
+        String username = getProperty("username");
+        String password = ("password");
+        String baseUrl = getProperty("base_url");
+        long timeout =  properties.getLong("phoenixd.timeout");
         String auth = username + ":" + password;
         String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
 
@@ -59,13 +69,13 @@ public abstract class AbstractOperation implements Operation {
 
     @SneakyThrows
     public AbstractOperation(@NonNull String method, @NonNull String path, @NonNull Request.Param param, String requestData) {
-        String username = configuration.get("username");
-        String password = configuration.get("password");
-        String baseUrl = configuration.get("base_url");
+        String username = getProperty("username");
+        String password = getProperty("password");
+        String baseUrl = getProperty("base_url");
 
         String auth = username + ":" + password;
         String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
-        long timeout = Long.valueOf(configuration.get("timeout"));
+        long timeout = properties.getLong("phoenixd.timeout");
 
         this.requestData = requestData;
 
@@ -130,5 +140,9 @@ public abstract class AbstractOperation implements Operation {
 
     public String replacePathVariables(String path, Request.Param param) {
         return path;
+    }
+
+    private static String getProperty(String key) {
+        return properties.getString("phoenixd." + key, null);
     }
 }
