@@ -104,6 +104,10 @@ public abstract class AbstractOperation implements Operation {
                 ));
         newHeadersMap.put(key, List.of(value));
 
+        String method = httpRequest.method();
+        HttpRequest.BodyPublisher bodyPublisher = httpRequest.bodyPublisher()
+                .orElse(HttpRequest.BodyPublishers.noBody());
+
         HttpRequest newHttpRequest = HttpRequest.newBuilder()
                 .uri(httpRequest.uri())
                 .timeout(httpRequest.timeout().orElse(null))
@@ -111,12 +115,12 @@ public abstract class AbstractOperation implements Operation {
                         .flatMap(e -> e.getValue().stream().map(v -> Map.entry(e.getKey(), v)))
                         .flatMap(e -> Stream.of(e.getKey(), e.getValue()))
                         .toArray(String[]::new))
-                .POST(httpRequest.bodyPublisher().orElse(HttpRequest.BodyPublishers.noBody()))
+                .method(method, bodyPublisher)
                 .build();
 
         this.setHttpRequest(newHttpRequest);
 
-        return new PostOperation(newHttpRequest);
+        return this;
     }
 
     @Override

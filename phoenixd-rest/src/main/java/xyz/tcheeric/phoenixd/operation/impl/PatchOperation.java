@@ -26,7 +26,7 @@ public class PatchOperation extends AbstractOperation {
 
     @Override
     public Operation addHeader(String key, String value) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        return super.addHeader(key, value);
     }
 
 }
