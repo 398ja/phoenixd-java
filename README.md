@@ -39,7 +39,6 @@ Running `mvn clean verify` generates a Jacoco coverage report. The aggregated HT
 
 ## Usage example
 ```java
-Configuration cfg = new Configuration("phoenixd");
 CreateInvoiceParam param = new CreateInvoiceParam();
 param.setAmountSat(100);
 CreateBolt11InvoiceRequest req = new CreateBolt11InvoiceRequest(param);

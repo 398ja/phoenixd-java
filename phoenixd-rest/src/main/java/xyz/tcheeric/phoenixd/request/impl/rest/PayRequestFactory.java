@@ -21,8 +21,7 @@ public class PayRequestFactory {
             param.setInvoice(request);
             return new PayBolt11InvoiceRequest(param);
         } else {
-            return null;
-            //throw new IllegalArgumentException("Invalid request format");
+            throw new IllegalArgumentException("Invalid request format");
         }
     }
 }

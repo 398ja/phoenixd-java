@@ -2,6 +2,7 @@ name: CI
 
 on:
   push:
+    branches: [ main ]
   pull_request:
 
 jobs:
@@ -16,7 +17,16 @@ jobs:
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: '21'
-      - name: Build with Maven
+          cache: maven
+      - name: Build
         run: mvn -q verify
+      - name: Check coverage
+        run: mvn -q jacoco:check@coverage-check
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: target/site/jacoco-aggregate/
