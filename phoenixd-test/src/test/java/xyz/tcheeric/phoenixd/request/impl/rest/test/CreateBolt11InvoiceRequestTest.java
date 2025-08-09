@@ -2,16 +2,22 @@ package xyz.tcheeric.phoenixd.request.impl.rest.test;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import xyz.tcheeric.phoenixd.test.LocalTestServerExtension;
 import xyz.tcheeric.phoenixd.model.param.CreateInvoiceParam;
 import xyz.tcheeric.phoenixd.model.response.CreateInvoiceResponse;
 import xyz.tcheeric.phoenixd.request.impl.rest.CreateBolt11InvoiceRequest;
+import xyz.tcheeric.phoenixd.test.LocalTestServerExtension;
+import xyz.tcheeric.phoenixd.test.TestUtils;
 
+import com.sun.net.httpserver.HttpServer;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(LocalTestServerExtension.class)
 public class CreateBolt11InvoiceRequestTest {
@@ -57,5 +63,37 @@ public class CreateBolt11InvoiceRequestTest {
         assertNotNull(response.getSerialized());
         assertNotNull(response.getPaymentHash());
         log.log(Level.ALL, "Invoice: {0}", response.getSerialized());
+    }
+
+    @Test
+    public void testUriAndHeaders() {
+        // Arrange
+        CreateBolt11InvoiceRequest request = new CreateBolt11InvoiceRequest(new CreateInvoiceParam());
+
+        // Assert
+        assertEquals("http://localhost:9740/createinvoice", request.getOperation().getHttpRequest().uri().toString());
+        assertEquals("Basic Og==", request.getOperation().getHeader("Authorization"));
+        assertEquals("application/x-www-form-urlencoded", request.getOperation().getHeader("Content-Type"));
+    }
+
+    @Test
+    public void testErrorHandling() throws Exception {
+        HttpServer errorServer = HttpServer.create(new InetSocketAddress(ERROR_SERVER_PORT), 0);
+        errorServer.createContext("/createinvoice", exchange -> {
+            byte[] bytes = "error".getBytes(StandardCharsets.UTF_8);
+            exchange.sendResponseHeaders(500, bytes.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(bytes);
+            }
+        });
+        errorServer.start();
+        try {
+            TestUtils.setBaseUrl("http://localhost:" + ERROR_PORT);
+            CreateBolt11InvoiceRequest request = new CreateBolt11InvoiceRequest(new CreateInvoiceParam());
+            assertThrows(IOException.class, request::getResponse);
+        } finally {
+            errorServer.stop(0);
+            TestUtils.setBaseUrl("http://localhost:9740");
+        }
     }
 }
