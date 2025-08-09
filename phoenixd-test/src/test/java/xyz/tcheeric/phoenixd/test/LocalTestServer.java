@@ -18,6 +18,8 @@ public class LocalTestServer {
         server.createContext("/paylnaddress", this::handlePayLightningAddress);
         server.createContext("/createinvoice", this::handleCreateInvoice);
         server.createContext("/decodeinvoice", this::handleDecodeInvoice);
+        server.createContext("/delete", this::handleDelete);
+        server.createContext("/patch", this::handlePatch);
         server.setExecutor(null);
         server.start();
     }
@@ -43,6 +45,14 @@ public class LocalTestServer {
 
     private void handleDecodeInvoice(HttpExchange exchange) throws IOException {
         writeJson(exchange, "{\"amount\":1000,\"description\":\"1 Blockaccino\"}");
+    }
+
+    private void handleDelete(HttpExchange exchange) throws IOException {
+        writeJson(exchange, "{\"status\":\"deleted\"}");
+    }
+
+    private void handlePatch(HttpExchange exchange) throws IOException {
+        writeJson(exchange, "{\"status\":\"patched\"}");
     }
 
     private void writeJson(HttpExchange exchange, String json) throws IOException {
