@@ -8,9 +8,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
     env:
       PHOENIXD_USERNAME: ${{ secrets.PHOENIXD_USERNAME }}
       PHOENIXD_PASSWORD: ${{ secrets.PHOENIXD_PASSWORD }}
@@ -24,7 +21,7 @@ jobs:
           java-version: '21'
           cache: maven
       - name: Verify
-        run: mvn -q verify
+        run: mvn -B -q -ntp verify
 
       - name: Upload coverage report
         if: always()
