@@ -78,7 +78,7 @@ public class CreateBolt11InvoiceRequestTest {
 
     @Test
     public void testErrorHandling() throws Exception {
-        HttpServer errorServer = HttpServer.create(new InetSocketAddress(9750), 0);
+        HttpServer errorServer = HttpServer.create(new InetSocketAddress(ERROR_SERVER_PORT), 0);
         errorServer.createContext("/createinvoice", exchange -> {
             byte[] bytes = "error".getBytes(StandardCharsets.UTF_8);
             exchange.sendResponseHeaders(500, bytes.length);
