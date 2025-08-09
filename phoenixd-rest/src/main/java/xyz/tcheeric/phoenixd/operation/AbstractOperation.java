@@ -14,6 +14,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Base64;
@@ -71,9 +72,13 @@ public abstract class AbstractOperation implements Operation {
 
         HttpRequest.BodyPublisher bodyPublisher = requestData == null ? HttpRequest.BodyPublishers.noBody() : HttpRequest.BodyPublishers.ofString(requestData);
 
-        String separator = param.getKind() == Request.Param.Kind.PATH ? "/" : "?";
+        String resolvedPath = replacePathVariables(path, param);
+        if (param.getKind() == Request.Param.Kind.QUERY) {
+            resolvedPath = resolvedPath + "?" + param;
+        }
+
         this.httpRequest = HttpRequest.newBuilder()
-                .uri(URI.create(baseUrl + replacePathVariables(path, param) + separator + param))
+                .uri(URI.create(baseUrl + resolvedPath))
                 .header("Authorization", "Basic " + encodedAuth)
                 .timeout(Duration.ofMillis(timeout))
                 .method(method, bodyPublisher)
@@ -134,6 +139,19 @@ public abstract class AbstractOperation implements Operation {
     }
 
     public String replacePathVariables(String path, Request.Param param) {
+        if (param == null || param.getKind() != Request.Param.Kind.PATH) {
+            return path;
+        }
+
+        Field[] fields = param.getClass().getDeclaredFields();
+        for (Field field : fields) {
+            field.setAccessible(true);
+            Object value = field.get(param);
+            if (value != null) {
+                String placeholder = "{" + field.getName() + "}";
+                path = path.replace(placeholder, value.toString());
+            }
+        }
         return path;
     }
 }
