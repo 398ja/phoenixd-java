@@ -7,7 +7,6 @@ import xyz.tcheeric.phoenixd.request.impl.rest.PayRequestFactory;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.*;
 
 import xyz.tcheeric.phoenixd.request.impl.rest.PayLightningAddressRequest;
 
