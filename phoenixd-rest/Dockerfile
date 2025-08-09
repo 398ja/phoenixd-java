@@ -1,7 +1,7 @@
 FROM eclipse-temurin:21-jre
 
 WORKDIR /app
-COPY target/phoenixd-rest-1.0-SNAPSHOT.jar /app/phoenixd-rest.jar
+COPY target/phoenixd-rest-*.jar /app/phoenixd-rest.jar
 
 EXPOSE 9740
 
