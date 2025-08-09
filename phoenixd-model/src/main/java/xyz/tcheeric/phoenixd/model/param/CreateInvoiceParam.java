@@ -31,6 +31,9 @@ public class CreateInvoiceParam implements Request.Param {
     }
 
     private static String encode(String value) {
+        if (value == null) {
+            return "";
+        }
         return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
 }
