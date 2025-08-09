@@ -1,8 +1,8 @@
 package xyz.tcheeric.phoenixd.request.impl;
 
 import lombok.NonNull;
-import xyz.tcheeric.phoenixd.common.Request;
-import xyz.tcheeric.phoenixd.common.Response;
+import xyz.tcheeric.phoenixd.common.rest.Request;
+import xyz.tcheeric.phoenixd.common.rest.Response;
 import xyz.tcheeric.phoenixd.operation.impl.DeleteOperation;
 import xyz.tcheeric.phoenixd.request.AbstractRequest;
 
@@ -12,7 +12,7 @@ public class DeleteRequest<T extends Request.Param, U extends Response> extends 
         super(path, null, new DeleteOperation(path));
     }
 
-    public DeleteRequest(String path, Param param) {
+    public DeleteRequest(String path, T param) {
         super(path, param, new DeleteOperation(path, param));
     }
     

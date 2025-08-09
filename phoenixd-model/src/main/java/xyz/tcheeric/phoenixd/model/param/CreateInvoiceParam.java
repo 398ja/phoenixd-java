@@ -1,7 +1,7 @@
 package xyz.tcheeric.phoenixd.model.param;
 
 import lombok.Data;
-import xyz.tcheeric.phoenixd.common.Request;
+import xyz.tcheeric.phoenixd.common.rest.Request;
 
 import java.net.URL;
 

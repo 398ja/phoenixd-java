@@ -1,4 +1,4 @@
-package xyz.tcheeric.phoenixd.common;
+package xyz.tcheeric.phoenixd.common.rest.util;
 
 public interface Constants {
 

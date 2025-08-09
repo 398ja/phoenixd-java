@@ -2,9 +2,9 @@ package xyz.tcheeric.phoenixd.operation.impl;
 
 import lombok.NonNull;
 import lombok.SneakyThrows;
-import xyz.tcheeric.phoenixd.common.Constants;
-import xyz.tcheeric.phoenixd.common.Operation;
-import xyz.tcheeric.phoenixd.common.Request;
+import xyz.tcheeric.phoenixd.common.rest.Operation;
+import xyz.tcheeric.phoenixd.common.rest.Request;
+import xyz.tcheeric.phoenixd.common.rest.util.Constants;
 import xyz.tcheeric.phoenixd.operation.AbstractOperation;
 
 public class PatchOperation extends AbstractOperation {
@@ -26,7 +26,7 @@ public class PatchOperation extends AbstractOperation {
 
     @Override
     public Operation addHeader(String key, String value) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        return super.addHeader(key, value);
     }
 
 }

@@ -2,8 +2,8 @@ package xyz.tcheeric.phoenixd.request.impl;
 
 import lombok.Getter;
 import lombok.NonNull;
-import xyz.tcheeric.phoenixd.common.Request;
-import xyz.tcheeric.phoenixd.common.Response;
+import xyz.tcheeric.phoenixd.common.rest.Request;
+import xyz.tcheeric.phoenixd.common.rest.Response;
 import xyz.tcheeric.phoenixd.operation.impl.GetOperation;
 import xyz.tcheeric.phoenixd.request.AbstractRequest;
 
@@ -14,7 +14,7 @@ public class GetRequest<T extends Request.Param, U extends Response> extends Abs
         super(path, null, new GetOperation(path));
     }
 
-    public GetRequest(@NonNull String path, @NonNull Param param) {
+    public GetRequest(@NonNull String path, @NonNull T param) {
         super(path, param, new GetOperation(path, param));
     }
 

@@ -1,9 +1,9 @@
-package xyz.tcheeric.phoenixd.common;
+package xyz.tcheeric.phoenixd.common.rest;
 
 public interface Request<T extends Request.Param, U extends Response> {
 
     default U getResponse() {
-        return null;
+        throw new UnsupportedOperationException("Implement getResponse in Request implementations");
     }
 
     interface Param {

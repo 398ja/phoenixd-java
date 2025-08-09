@@ -1,14 +1,15 @@
 package xyz.tcheeric.phoenixd.request.impl.rest.test;
 
-import lombok.extern.java.Log;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import xyz.tcheeric.phoenixd.test.LocalTestServerExtension;
 import xyz.tcheeric.phoenixd.model.param.DecodeInvoiceParam;
 import xyz.tcheeric.phoenixd.model.response.DecodeInvoiceResponse;
 import xyz.tcheeric.phoenixd.request.impl.rest.DecodeInvoiceRequest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@Log
+@ExtendWith(LocalTestServerExtension.class)
 public class DecodeInvoiceRequestTest {
 
     @Test

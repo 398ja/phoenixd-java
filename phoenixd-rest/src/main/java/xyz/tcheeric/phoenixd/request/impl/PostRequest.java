@@ -2,15 +2,15 @@ package xyz.tcheeric.phoenixd.request.impl;
 
 import lombok.Getter;
 import lombok.NonNull;
-import xyz.tcheeric.phoenixd.common.Request;
-import xyz.tcheeric.phoenixd.common.Response;
+import xyz.tcheeric.phoenixd.common.rest.Request;
+import xyz.tcheeric.phoenixd.common.rest.Response;
 import xyz.tcheeric.phoenixd.operation.impl.PostOperation;
 import xyz.tcheeric.phoenixd.request.AbstractRequest;
 
 @Getter
 public class PostRequest<T extends Request.Param, U extends Response> extends AbstractRequest<T, U> {
 
-    public PostRequest(@NonNull String path, @NonNull Request.Param param) {
+    public PostRequest(@NonNull String path, @NonNull T param) {
         super(path, param, new PostOperation(path, param.toString()));
     }
 
@@ -18,7 +18,7 @@ public class PostRequest<T extends Request.Param, U extends Response> extends Ab
         super(path, null, new PostOperation(path, body));
     }
 
-    public PostRequest(@NonNull String path, @NonNull Param param, @NonNull String body) {
+    public PostRequest(@NonNull String path, @NonNull T param, @NonNull String body) {
         super(path, param, new PostOperation(path, param, body));
     }
 

@@ -4,10 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import xyz.tcheeric.phoenixd.common.Operation;
-import xyz.tcheeric.phoenixd.common.Request;
-import xyz.tcheeric.phoenixd.common.Response;
-import xyz.tcheeric.phoenixd.common.VoidResponse;
+import xyz.tcheeric.phoenixd.common.rest.Operation;
+import xyz.tcheeric.phoenixd.common.rest.Request;
+import xyz.tcheeric.phoenixd.common.rest.Response;
+import xyz.tcheeric.phoenixd.common.rest.VoidResponse;
 import xyz.tcheeric.phoenixd.model.response.GetLightningAddressResponse;
 
 import java.lang.reflect.ParameterizedType;
@@ -16,7 +16,7 @@ import java.lang.reflect.ParameterizedType;
 @RequiredArgsConstructor
 public abstract class AbstractRequest<T extends Request.Param, U extends Response> implements Request<T, U> {
     private final String path;
-    private final Param param;
+    private final T param;
     private final Operation operation;
 
     @SneakyThrows

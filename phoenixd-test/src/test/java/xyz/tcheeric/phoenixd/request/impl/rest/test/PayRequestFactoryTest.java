@@ -7,6 +7,9 @@ import xyz.tcheeric.phoenixd.request.impl.rest.PayRequestFactory;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
+
+import xyz.tcheeric.phoenixd.request.impl.rest.PayLightningAddressRequest;
 
 public class PayRequestFactoryTest {
 
@@ -18,5 +21,20 @@ public class PayRequestFactoryTest {
 
         assertNotNull(request);
         assertEquals(PayBolt11InvoiceRequest.class, request.getClass());
+    }
+    
+    @Test
+    public void testCreateLightningAddressRequest() {
+        assertTrue(PayRequestFactory.createPayRequest("alice@example.com") instanceof PayLightningAddressRequest);
+    }
+
+    @Test
+    public void testCreateBolt11InvoiceRequest() {
+        assertTrue(PayRequestFactory.createPayRequest("lnbc1u1pw0kx7pp5") instanceof PayBolt11InvoiceRequest);
+    }
+
+    @Test
+    public void testInvalidRequestThrows() {
+        assertThrows(IllegalArgumentException.class, () -> PayRequestFactory.createPayRequest("invalid"));
     }
 }

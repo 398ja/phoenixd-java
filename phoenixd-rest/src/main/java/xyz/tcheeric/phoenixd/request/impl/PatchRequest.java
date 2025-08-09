@@ -2,8 +2,8 @@ package xyz.tcheeric.phoenixd.request.impl;
 
 import lombok.Getter;
 import lombok.NonNull;
-import xyz.tcheeric.phoenixd.common.Request;
-import xyz.tcheeric.phoenixd.common.Response;
+import xyz.tcheeric.phoenixd.common.rest.Request;
+import xyz.tcheeric.phoenixd.common.rest.Response;
 import xyz.tcheeric.phoenixd.operation.impl.PatchOperation;
 import xyz.tcheeric.phoenixd.request.AbstractRequest;
 
@@ -14,7 +14,7 @@ public class PatchRequest<T extends Request.Param, U extends Response> extends A
         super(path, null, new PatchOperation(path));
     }
 
-    public PatchRequest(@NonNull String path, @NonNull Param param) {
+    public PatchRequest(@NonNull String path, @NonNull T param) {
         super(path, param, new PatchOperation(path, param));
     }
 }
