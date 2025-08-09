@@ -25,5 +25,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: jacoco-report
-          path: target/site/jacoco-aggregate/index.html
+          path: target/site/jacoco-aggregate/
 
