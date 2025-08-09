@@ -37,6 +37,11 @@ This command executes unit and integration tests for all modules.
 ## Code coverage
 Running `mvn clean verify` generates a Jacoco coverage report. The aggregated HTML report is written to `target/site/jacoco-aggregate/index.html`.
 
+## Release
+
+Tag a commit with `v*` to trigger the release workflow. The workflow builds the JARs with `mvn -q package`, publishes them to GitHub Packages, and pushes a Docker image built from `phoenixd-rest/Dockerfile` to the GitHub Container Registry.
+
+
 ## Usage example
 ```java
 CreateInvoiceParam param = new CreateInvoiceParam();
