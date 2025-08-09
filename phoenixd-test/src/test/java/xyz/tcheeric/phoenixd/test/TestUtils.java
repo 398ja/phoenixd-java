@@ -21,7 +21,7 @@ public final class TestUtils {
             Field configField = AbstractOperation.class.getDeclaredField(CONFIG_FIELD_NAME);
             configField.setAccessible(true);
             Properties props = (Properties) configField.get(null);
-            props.setProperty("phoenixd.base_url", baseUrl);
+            props.setProperty(PHOENIXD_BASE_URL_KEY, baseUrl);
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException(e);
         }
