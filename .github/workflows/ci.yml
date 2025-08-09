@@ -8,6 +8,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      PHOENIXD_USERNAME: ${{ secrets.PHOENIXD_USERNAME }}
+      PHOENIXD_PASSWORD: ${{ secrets.PHOENIXD_PASSWORD }}
+      PHOENIXD_BASE_URL: ${{ secrets.PHOENIXD_BASE_URL }}
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 21
@@ -26,4 +30,3 @@ jobs:
         with:
           name: jacoco-report
           path: target/site/jacoco-aggregate/
-
