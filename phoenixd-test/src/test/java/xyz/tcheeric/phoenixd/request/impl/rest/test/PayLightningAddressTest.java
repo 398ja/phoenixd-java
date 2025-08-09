@@ -67,7 +67,7 @@ public class PayLightningAddressTest {
         });
         errorServer.start();
         try {
-            TestUtils.setBaseUrl("http://localhost:9751");
+            TestUtils.setBaseUrl("http://localhost:" + ERROR_SERVER_PORT);
             PayLightningAddressParam param = new PayLightningAddressParam();
             param.setAddress("398ja@strike.me");
             param.setMessage("msg");
