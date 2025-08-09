@@ -133,7 +133,6 @@ public abstract class AbstractOperation implements Operation {
         return httpRequest.headers().firstValue(key).orElse(null);
     }
 
-    @SneakyThrows
     public String replacePathVariables(String path, Request.Param param) {
         if (param == null || param.getKind() != Request.Param.Kind.PATH) {
             return path;
