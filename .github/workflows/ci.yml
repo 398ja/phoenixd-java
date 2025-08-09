@@ -24,7 +24,7 @@ jobs:
           java-version: '21'
           cache: maven
       - name: Verify
-        run: mvn -q verify
+        run: mvn -B -q -ntp verify
 
       - name: Upload coverage report
         if: always()

@@ -22,10 +22,10 @@ jobs:
           server-password: GITHUB_TOKEN
 
       - name: Build with Maven
-        run: mvn -q package
+        run: mvn -B -q -ntp verify
 
       - name: Publish to GitHub Packages
-        run: mvn -q deploy
+        run: mvn -B -q -ntp deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
