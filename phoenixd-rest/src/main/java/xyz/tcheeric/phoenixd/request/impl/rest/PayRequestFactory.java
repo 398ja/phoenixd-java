@@ -8,7 +8,12 @@ import java.util.regex.Pattern;
 
 public class PayRequestFactory {
 
-    private static final Pattern BOLT11_PATTERN = Pattern.compile("^(lnbc|lntb|lnsb|lnbcrt)[0-9]*[a-z0-9]+$");
+    /**
+     * Matches BOLT11 invoices regardless of case.
+     */
+    private static final Pattern BOLT11_PATTERN =
+            Pattern.compile("^(lnbc|lntb|lnsb|lnbcrt)[0-9]*[a-z0-9]+$",
+                    Pattern.CASE_INSENSITIVE);
 
     public static BasePayRequest<?, ?> createPayRequest(@NonNull String request) {
 
