@@ -88,7 +88,7 @@ public class CreateBolt11InvoiceRequestTest {
         });
         errorServer.start();
         try {
-            TestUtils.setBaseUrl("http://localhost:9750");
+            TestUtils.setBaseUrl("http://localhost:" + ERROR_PORT);
             CreateBolt11InvoiceRequest request = new CreateBolt11InvoiceRequest(new CreateInvoiceParam());
             assertThrows(IOException.class, request::getResponse);
         } finally {
