@@ -3,7 +3,6 @@ package xyz.tcheeric.phoenixd.operation;
 import lombok.Data;
 import lombok.NonNull;
 import lombok.SneakyThrows;
-import xyz.tcheeric.phoenixd.common.rest.util.Configuration;
 import xyz.tcheeric.phoenixd.operation.impl.PostOperation;
 import xyz.tcheeric.phoenixd.common.rest.Operation;
 import xyz.tcheeric.phoenixd.common.rest.Request;
@@ -19,6 +18,7 @@ import java.time.Duration;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -30,7 +30,36 @@ public abstract class AbstractOperation implements Operation {
     private String responseBody;
     private String requestData;
 
-    private Configuration configuration = new Configuration("phoenixd", getClass().getResource("/app.properties"));
+    public static final long DEFAULT_TIMEOUT = 5000L;
+    private static final String PREFIX = "phoenixd.";
+    private static final Properties CONFIG = loadConfig();
+
+    @SneakyThrows
+    private static Properties loadConfig() {
+        Properties props = new Properties();
+        try (var stream = AbstractOperation.class.getResourceAsStream("/app.properties")) {
+            if (stream != null) {
+                props.load(stream);
+            }
+        }
+        return props;
+    }
+
+    private static String getProperty(String key) {
+        return CONFIG.getProperty(PREFIX + key);
+    }
+
+    private static long getLongProperty(String key, long defaultValue) {
+        String value = CONFIG.getProperty(PREFIX + key);
+        if (value == null) {
+            return defaultValue;
+        }
+        try {
+            return Long.parseLong(value);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
 
     public AbstractOperation(@NonNull HttpRequest httpRequest) {
         this.httpRequest = httpRequest;
@@ -38,10 +67,10 @@ public abstract class AbstractOperation implements Operation {
 
     @SneakyThrows
     public AbstractOperation(@NonNull String method, @NonNull String path, String requestData) {
-        String username = configuration.get("username");
-        String password = configuration.get("password");
-        String baseUrl = configuration.get("base_url");
-        long timeout = Long.valueOf(configuration.get("timeout"));
+        String username = getProperty("username");
+        String password = getProperty("password");
+        String baseUrl = getProperty("base_url");
+        long timeout = getLongProperty("timeout", DEFAULT_TIMEOUT);
         String auth = username + ":" + password;
         String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
 
@@ -59,13 +88,13 @@ public abstract class AbstractOperation implements Operation {
 
     @SneakyThrows
     public AbstractOperation(@NonNull String method, @NonNull String path, @NonNull Request.Param param, String requestData) {
-        String username = configuration.get("username");
-        String password = configuration.get("password");
-        String baseUrl = configuration.get("base_url");
+        String username = getProperty("username");
+        String password = getProperty("password");
+        String baseUrl = getProperty("base_url");
 
         String auth = username + ":" + password;
         String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
-        long timeout = Long.valueOf(configuration.get("timeout"));
+        long timeout = getLongProperty("timeout", DEFAULT_TIMEOUT);
 
         this.requestData = requestData;
 
