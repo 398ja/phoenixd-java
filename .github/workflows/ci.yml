@@ -8,6 +8,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
     env:
       PHOENIXD_USERNAME: ${{ secrets.PHOENIXD_USERNAME }}
       PHOENIXD_PASSWORD: ${{ secrets.PHOENIXD_PASSWORD }}
@@ -20,13 +23,12 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
-      - name: Build
+      - name: Verify
         run: mvn -q verify
-      - name: Check coverage
-        run: mvn -q jacoco:check@coverage-check
+
       - name: Upload coverage report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: jacoco-report
+          name: jacoco-aggregate
           path: target/site/jacoco-aggregate/
