@@ -11,7 +11,14 @@ public final class TestUtils {
 
     public static void setBaseUrl(String baseUrl) {
         try {
-            Field configField = AbstractOperation.class.getDeclaredField("CONFIG");
+    private static final String CONFIG_FIELD_NAME = "CONFIG";
+
+    private TestUtils() {
+    }
+
+    public static void setBaseUrl(String baseUrl) {
+        try {
+            Field configField = AbstractOperation.class.getDeclaredField(CONFIG_FIELD_NAME);
             configField.setAccessible(true);
             Properties props = (Properties) configField.get(null);
             props.setProperty("phoenixd.base_url", baseUrl);
