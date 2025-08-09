@@ -12,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class AbstractOperationTest {
 
     @Test
-    void executeMakesSingleNetworkCall() throws Exception {
+    void executeWithHttpClientSendMakesSingleNetworkCall() throws Exception {
         MockWebServer server = new MockWebServer();
         server.enqueue(new MockResponse().setResponseCode(200).setBody("ok"));
         server.start();
@@ -26,6 +26,7 @@ public class AbstractOperationTest {
             operation.execute();
 
             assertThat(server.getRequestCount()).isEqualTo(1);
+            assertThat(server.takeRequest().getMethod()).isEqualTo("GET");
             assertThat(operation.getResponseBody()).isEqualTo("ok");
         } finally {
             server.shutdown();

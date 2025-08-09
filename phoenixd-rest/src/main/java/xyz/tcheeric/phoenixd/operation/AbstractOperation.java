@@ -20,7 +20,6 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -117,10 +116,9 @@ public abstract class AbstractOperation implements Operation {
     @SneakyThrows
     @Override
     public Operation execute() {
-        CompletableFuture<HttpResponse<String>> response = HttpClient.newBuilder()
+        HttpResponse<String> httpResp = HttpClient.newBuilder()
                 .build()
-                .sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString());
-        HttpResponse<String> httpResp = response.get();
+                .send(httpRequest, HttpResponse.BodyHandlers.ofString());
         this.responseBody = httpResp.body();
         var statusCode = httpResp.statusCode();
         if (statusCode < 200 || statusCode >= 300) {
