@@ -86,8 +86,9 @@ public abstract class AbstractOperation implements Operation {
         CompletableFuture<HttpResponse<String>> response = HttpClient.newBuilder()
                 .build()
                 .sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString());
-        this.responseBody = response.get().body();
-        var statusCode = response.get().statusCode();
+        HttpResponse<String> httpResp = response.get();
+        this.responseBody = httpResp.body();
+        var statusCode = httpResp.statusCode();
         if (statusCode < 200 || statusCode >= 300) {
             throw new IOException("Failed to create invoice: " + statusCode + " " + responseBody);
         }
