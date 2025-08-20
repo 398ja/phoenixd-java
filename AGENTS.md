@@ -21,3 +21,4 @@
 - Include any limitations or known issues in the description.
 - Add a "Network Access" section summarizing blocked domains if network requests were denied.
 - Ensure all new features, modules, or dependencies are properly documented in the `README.md` file.
+- Always follow the repository's PR submission guidelines and use the PR template located at `.github/pull_request_template.md`.
