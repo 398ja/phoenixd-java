@@ -1,0 +1,23 @@
+# Labeler configuration for automatic issue labeling
+# Labels issues based on keywords found in titles or bodies.
+
+bug:
+  - bug
+  - error
+  - exception
+  - failure
+
+enhancement:
+  - feature
+  - enhancement
+  - improvement
+
+documentation:
+  - docs
+  - documentation
+  - readme
+
+ci:
+  - build
+  - workflow
+  - ci
