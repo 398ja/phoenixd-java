@@ -31,6 +31,7 @@ A simple Java client for ACINQ's [phoenixd REST API](https://phoenix.acinq.co/se
 
 ## PR Quality Gate
 
+- Always follow the PR submission guidelines and use the [PR template](.github/pull_request_template.md) when creating pull requests.
 - PR summaries must reference modified files with file path citations (e.g. `F:path/to/file.java†L1-L2`).
 - PR titles and commit messages must follow the `type: description` naming format.
 - Allowed types: feat, fix, docs, refactor, test, chore, ci, build, perf, style.
