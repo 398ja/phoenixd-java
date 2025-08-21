@@ -23,6 +23,7 @@ public class PathVariableReplacementTest {
         }
     }
 
+    // Verifies multiple path variables are replaced in the URI
     @Test
     public void replacesMultipleVariables() {
         MultiPathParam param = new MultiPathParam("123", "456");

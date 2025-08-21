@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class PayBolt11InvoiceInvoiceResponseTest {
 
+    // Validates Bolt11 payment response fields and string output
     @Test
     void settersGettersAndToString() {
         PayBolt11InvoiceInvoiceResponse response = new PayBolt11InvoiceInvoiceResponse();

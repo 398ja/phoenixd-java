@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class ConstantsTest {
 
+    // Validates that HTTP method constants expose the correct strings
     @Test
     void httpMethodConstantsMatchValues() {
         assertThat(Constants.HTTP_GET_METHOD).isEqualTo("GET");

@@ -12,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @ExtendWith(LocalTestServerExtension.class)
 public class PayBolt11InvoiceRequestTest {
 
+    // Verifies the request initializes with the proper path, param, and operation
     @Test
     public void testConstructor() {
         // Arrange

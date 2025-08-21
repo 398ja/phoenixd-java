@@ -7,6 +7,7 @@ import xyz.tcheeric.phoenixd.model.response.CreateInvoiceResponse;
 import xyz.tcheeric.phoenixd.request.impl.rest.CreateBolt11InvoiceRequest;
 import xyz.tcheeric.phoenixd.test.LocalTestServerExtension;
 import xyz.tcheeric.phoenixd.test.TestUtils;
+import xyz.tcheeric.phoenixd.operation.AbstractOperation;
 
 import com.sun.net.httpserver.HttpServer;
 
@@ -23,7 +24,9 @@ import static org.junit.jupiter.api.Assertions.*;
 public class CreateBolt11InvoiceRequestTest {
 
     private static final Logger log = Logger.getLogger(CreateBolt11InvoiceRequestTest.class.getName());
+    private static final int ERROR_SERVER_PORT = 9751;
 
+    // Checks constructor initializes request with correct path
     @Test
     public void testConstructor() {
         // Arrange and Act
@@ -33,6 +36,7 @@ public class CreateBolt11InvoiceRequestTest {
         assertEquals("/createinvoice", createBolt11InvoiceRequest.getPath());
     }
 
+    // Ensures headers can be added to the underlying operation
     @Test
     public void testAddHeader() {
         // Arrange
@@ -45,6 +49,7 @@ public class CreateBolt11InvoiceRequestTest {
         assertEquals("value", createBolt11InvoiceRequest.getOperation().getHeader("key"));
     }
 
+    // Validates response parsing for a successful invoice creation
     @Test
     public void testGetResponse() throws Exception {
         // Arrange
@@ -65,17 +70,19 @@ public class CreateBolt11InvoiceRequestTest {
         log.log(Level.ALL, "Invoice: {0}", response.getSerialized());
     }
 
+    // Verifies request URI and default headers are set properly
     @Test
     public void testUriAndHeaders() {
         // Arrange
         CreateBolt11InvoiceRequest request = new CreateBolt11InvoiceRequest(new CreateInvoiceParam());
 
         // Assert
-        assertEquals("http://localhost:9740/createinvoice", request.getOperation().getHttpRequest().uri().toString());
+        assertEquals("http://localhost:9740/createinvoice", ((AbstractOperation) request.getOperation()).getHttpRequest().uri().toString());
         assertEquals("Basic Og==", request.getOperation().getHeader("Authorization"));
         assertEquals("application/x-www-form-urlencoded", request.getOperation().getHeader("Content-Type"));
     }
 
+    // Confirms IOExceptions are thrown when server returns an error
     @Test
     public void testErrorHandling() throws Exception {
         HttpServer errorServer = HttpServer.create(new InetSocketAddress(ERROR_SERVER_PORT), 0);
@@ -88,7 +95,7 @@ public class CreateBolt11InvoiceRequestTest {
         });
         errorServer.start();
         try {
-            TestUtils.setBaseUrl("http://localhost:" + ERROR_PORT);
+            TestUtils.setBaseUrl("http://localhost:" + ERROR_SERVER_PORT);
             CreateBolt11InvoiceRequest request = new CreateBolt11InvoiceRequest(new CreateInvoiceParam());
             assertThrows(IOException.class, request::getResponse);
         } finally {

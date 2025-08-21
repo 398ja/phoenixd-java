@@ -13,6 +13,7 @@ class AbstractOperationTimeoutTest {
         }
     }
 
+    // Ensures operations use the default timeout when none is set
     @Test
     void usesDefaultTimeoutWhenMissing() {
         TestOperation operation = new TestOperation();

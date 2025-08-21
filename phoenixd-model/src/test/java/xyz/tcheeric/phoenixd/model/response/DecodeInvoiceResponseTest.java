@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class DecodeInvoiceResponseTest {
 
+    // Checks getters, setters, and string output for complex invoice responses
     @Test
     void settersGettersAndToString() {
         DecodeInvoiceResponse response = new DecodeInvoiceResponse();

@@ -4,13 +4,16 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.Test;
 import xyz.tcheeric.phoenixd.operation.impl.GetOperation;
+import xyz.tcheeric.phoenixd.operation.impl.PostOperation;
 
 import java.net.http.HttpRequest;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class AbstractOperationTest {
 
+    // Confirms operations execute once and capture the response body
     @Test
     void executeMakesSingleNetworkCall() throws Exception {
         MockWebServer server = new MockWebServer();
@@ -30,5 +33,37 @@ public class AbstractOperationTest {
         } finally {
             server.shutdown();
         }
+    }
+
+    // Ensures non-success HTTP status codes trigger exceptions
+    @Test
+    void executeThrowsOnNon2xxResponse() throws Exception {
+        MockWebServer server = new MockWebServer();
+        server.enqueue(new MockResponse().setResponseCode(400));
+        server.start();
+        try {
+            HttpRequest request = HttpRequest.newBuilder(server.url("/fail").uri()).GET().build();
+            GetOperation operation = new GetOperation(request);
+            assertThatThrownBy(operation::execute).isInstanceOf(Exception.class);
+        } finally {
+            server.shutdown();
+        }
+    }
+
+    // Verifies adding a header replaces any existing value
+    @Test
+    void addHeaderReplacesExisting() {
+        PostOperation op = new PostOperation("/items", "data");
+        String original = op.getHeader("Authorization");
+        op.addHeader("Authorization", "Basic new");
+        assertThat(op.getHeader("Authorization")).isEqualTo("Basic new");
+        assertThat(original).isNotEqualTo(op.getHeader("Authorization"));
+    }
+
+    // Checks that removing headers from a POST operation is unsupported
+    @Test
+    void removeHeaderUnsupported() {
+        PostOperation op = new PostOperation("/items", "data");
+        assertThatThrownBy(() -> op.removeHeader("X")).isInstanceOf(UnsupportedOperationException.class);
     }
 }

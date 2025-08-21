@@ -13,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 @ExtendWith(LocalTestServerExtension.class)
 public class GetLightningAddressResponseTest {
 
+    // Ensures the request retrieves a lightning address and has correct path
     @Test
     public void testConstructor() {
         // Arrange

@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class GetLightningAddressResponseTest {
 
+    // Ensures lightning addresses are handled and formatted correctly
     @Test
     void settersGettersAndToString() {
         GetLightningAddressResponse response = new GetLightningAddressResponse();

@@ -5,6 +5,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import xyz.tcheeric.phoenixd.common.rest.util.Configuration;
 import xyz.tcheeric.phoenixd.model.param.PayLightningAddressParam;
 import xyz.tcheeric.phoenixd.model.response.PayLightningAddressInvoiceResponse;
+import xyz.tcheeric.phoenixd.operation.AbstractOperation;
 import xyz.tcheeric.phoenixd.operation.impl.PostOperation;
 import xyz.tcheeric.phoenixd.request.impl.rest.PayLightningAddressRequest;
 import xyz.tcheeric.phoenixd.test.LocalTestServerExtension;
@@ -22,6 +23,9 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(LocalTestServerExtension.class)
 public class PayLightningAddressTest {
 
+    private static final int ERROR_SERVER_PORT = 9751;
+
+    // Validates the request sends correct data and parses the payment response
     @Test
     public void testConstructor() {
         // Arrange
@@ -42,6 +46,7 @@ public class PayLightningAddressTest {
         assertEquals(10, response.getRecipientAmountSat());
     }
 
+    // Checks default URI and headers on the built request
     @Test
     public void testUriAndHeaders() {
         PayLightningAddressParam param = new PayLightningAddressParam();
@@ -50,14 +55,15 @@ public class PayLightningAddressTest {
         param.setAmountSat(10);
         PayLightningAddressRequest request = new PayLightningAddressRequest(param);
 
-        assertEquals("http://localhost:9740/paylnaddress", request.getOperation().getHttpRequest().uri().toString());
+        assertEquals("http://localhost:9740/paylnaddress", ((AbstractOperation) request.getOperation()).getHttpRequest().uri().toString());
         assertEquals("Basic Og==", request.getOperation().getHeader("Authorization"));
         assertEquals("application/x-www-form-urlencoded", request.getOperation().getHeader("Content-Type"));
     }
 
+    // Ensures IOExceptions are raised when the server responds with an error
     @Test
     public void testErrorHandling() throws Exception {
-        HttpServer errorServer = HttpServer.create(new InetSocketAddress(9751), 0);
+        HttpServer errorServer = HttpServer.create(new InetSocketAddress(ERROR_SERVER_PORT), 0);
         errorServer.createContext("/paylnaddress", exchange -> {
             byte[] bytes = "error".getBytes(StandardCharsets.UTF_8);
             exchange.sendResponseHeaders(500, bytes.length);

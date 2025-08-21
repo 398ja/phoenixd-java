@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class DecodeInvoiceParamTest {
 
+    // Ensures the invoice field is handled correctly in getters and toString
     @Test
     void settersGettersAndToString() {
         DecodeInvoiceParam param = new DecodeInvoiceParam();
