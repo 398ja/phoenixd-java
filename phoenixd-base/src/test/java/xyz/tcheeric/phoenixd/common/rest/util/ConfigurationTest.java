@@ -18,6 +18,7 @@ class ConfigurationTest {
         configuration = new Configuration("test", url);
     }
 
+    // Verifies all getter methods return expected defaults or file values
     @Test
     void keysAndGettersHandleDefaultsProperly() {
         assertThat(configuration.keys()).containsExactlyInAnyOrder("string", "int", "long", "double", "boolean");
@@ -47,12 +48,14 @@ class ConfigurationTest {
         assertThat(configuration.getBoolean("boolean", false)).isTrue();
     }
 
+    // Ensures the default constructor loads properties from the classpath
     @Test
     void defaultConstructorLoadsAppProperties() {
         Configuration cfg = new Configuration("test");
         assertThat(cfg.get("string")).isEqualTo("fromFile");
     }
 
+    // Confirms environment variables take precedence over property files
     @Test
     void environmentVariablesOverrideProperties() throws Exception {
         String classpath = System.getProperty("java.class.path");

@@ -31,6 +31,7 @@ public class DeleteOperationTest {
         }
     }
 
+    // Verifies DELETE operations handle headers and responses appropriately
     @Test
     public void testDeleteOperation() {
         TestDeleteRequest request = new TestDeleteRequest();

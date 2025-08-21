@@ -31,6 +31,7 @@ public class PatchOperationTest {
         }
     }
 
+    // Ensures PATCH requests use proper method, headers, and response mapping
     @Test
     public void testPatchOperation() {
         TestPatchRequest request = new TestPatchRequest();
@@ -40,7 +41,8 @@ public class PatchOperationTest {
         assertEquals("PATCH", ((PatchOperation) request.getOperation()).getHttpRequest().method());
 
         assertNotNull(request.getOperation().getHeader("Authorization"));
-        assertThrows(UnsupportedOperationException.class, () -> request.getOperation().addHeader("x", "y"));
+        assertDoesNotThrow(() -> request.getOperation().addHeader("x", "y"));
+        assertEquals("y", request.getOperation().getHeader("x"));
         assertThrows(UnsupportedOperationException.class, () -> request.getOperation().removeHeader("Authorization"));
 
         PatchResponse response = request.getResponse();

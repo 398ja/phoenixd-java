@@ -12,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @ExtendWith(LocalTestServerExtension.class)
 public class DecodeInvoiceRequestTest {
 
+    // Ensures a decode invoice request posts data and returns parsed response
     @Test
     public void testConstructor() {
         // Arrange

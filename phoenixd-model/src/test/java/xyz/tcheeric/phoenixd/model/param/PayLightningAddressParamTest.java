@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class PayLightningAddressParamTest {
 
+    // Ensures setters, getters, and toString handle a message field
     @Test
     void settersGettersAndToStringWithMessage() {
         PayLightningAddressParam param = new PayLightningAddressParam();
@@ -19,6 +20,7 @@ class PayLightningAddressParamTest {
         assertThat(param.toString()).isEqualTo("amountSat=70&address=addr&message=hello");
     }
 
+    // Confirms toString omits the message when it is empty or null
     @Test
     void toStringWithoutMessage() {
         PayLightningAddressParam param = new PayLightningAddressParam();
