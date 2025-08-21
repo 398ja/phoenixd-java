@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>xyz.tcheeric</groupId>
     <artifactId>phoenixd-java</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
     <packaging>pom</packaging>
 
     <modules>
@@ -33,8 +33,6 @@
         <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
         <maven-failsafe-plugin.version>2.22.2</maven-failsafe-plugin.version>
         <flatten-maven-plugin.version>1.5.0</flatten-maven-plugin.version>
-
-        <tcheeric.common.version>1.0-SNAPSHOT</tcheeric.common.version>
     </properties>
 
     <dependencyManagement>
