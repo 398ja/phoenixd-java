@@ -38,3 +38,4 @@ A simple Java client for ACINQ's [phoenixd REST API](https://phoenix.acinq.co/se
 - When TODOs or placeholders remain, include a Notes section.
 - Review AI-generated changes with developer expertise, ensuring you understand why the code works and that it remains resilient, scalable, and secure.
 - Use `rg` for search instead of `ls -R` or `grep -R`.
+- Ensure all new features are compliant with the API specification provided above.
