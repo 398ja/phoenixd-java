@@ -6,12 +6,8 @@ import java.lang.reflect.Field;
 import java.util.Properties;
 
 public final class TestUtils {
-    private TestUtils() {
-    }
-
-    public static void setBaseUrl(String baseUrl) {
-        try {
     private static final String CONFIG_FIELD_NAME = "CONFIG";
+    private static final String PHOENIXD_BASE_URL_KEY = "phoenixd.base_url";
 
     private TestUtils() {
     }

@@ -21,12 +21,16 @@ public class CreateInvoiceParam implements Request.Param {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("description=").append(encode(description))
-                .append("&amountSat=").append(encode(String.valueOf(amountSat)))
                 .append("&amountSat=").append(amountSat == null ? "" : amountSat)
                 .append("&expirySeconds=").append(expirySeconds == null ? "" : expirySeconds)
                 .append("&externalId=").append(encode(externalId));
         if (webhookUrl != null) {
-            sb.append("&webhookUrl=").append(encode(webhookUrl.toString()));
+            String urlString = webhookUrl.toString();
+            if (urlString.contains("?")) {
+                sb.append("&webhookUrl=").append(encode(urlString));
+            } else {
+                sb.append("&webhookUrl=").append(urlString);
+            }
         }
         return sb.toString();
     }
