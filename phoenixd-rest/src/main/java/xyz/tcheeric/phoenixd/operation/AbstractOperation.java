@@ -175,10 +175,14 @@ public abstract class AbstractOperation implements Operation {
         Field[] fields = param.getClass().getDeclaredFields();
         for (Field field : fields) {
             field.setAccessible(true);
-            Object value = field.get(param);
-            if (value != null) {
-                String placeholder = "{" + field.getName() + "}";
-                path = path.replace(placeholder, value.toString());
+            try {
+                Object value = field.get(param);
+                if (value != null) {
+                    String placeholder = "{" + field.getName() + "}";
+                    path = path.replace(placeholder, value.toString());
+                }
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
             }
         }
         return path;
