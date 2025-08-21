@@ -1,5 +1,9 @@
 # Repo Guidelines
 
+## Description
+A simple Java client for ACINQ's [phoenixd REST API](https://phoenix.acinq.co/server/api). It wraps the HTTP endpoints and exposes typed requests and responses.
+
+
 ## Testing
 
 - Always run `mvn -q verify` from the repository root before committing your changes.
@@ -22,3 +26,15 @@
 - Add a "Network Access" section summarizing blocked domains if network requests were denied.
 - Ensure all new features, modules, or dependencies are properly documented in the `README.md` file.
 - Always follow the repository's PR submission guidelines and use the PR template located at `.github/pull_request_template.md`.
+
+## PR Quality Gate
+
+- PR summaries must reference modified files with file path citations (e.g. `F:path/to/file.java†L1-L2`).
+- PR titles and commit messages must follow the `type: description` naming format.
+- Allowed types: feat, fix, docs, refactor, test, chore, ci, build, perf, style.
+- The description should be a concise verb + object phrase (e.g., `refactor: Refactor auth middleware to async`).
+- Include a Testing section listing the commands run. Prefix each command with ✅, ⚠️, or ❌ and cite relevant terminal output.
+- If network requests fail, add a Network Access section noting blocked domains.
+- When TODOs or placeholders remain, include a Notes section.
+- Review AI-generated changes with developer expertise, ensuring you understand why the code works and that it remains resilient, scalable, and secure.
+- Use `rg` for search instead of `ls -R` or `grep -R`.
