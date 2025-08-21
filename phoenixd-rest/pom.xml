@@ -9,7 +9,7 @@
 
     <artifactId>phoenixd-rest</artifactId>
     <packaging>jar</packaging>
-
+    <version>0.1.0</version>
     <name>phoenixd-rest</name>
     <url>https://maven.apache.org</url>
 
