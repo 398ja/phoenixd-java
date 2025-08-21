@@ -26,6 +26,7 @@ A simple Java client for ACINQ's [phoenixd REST API](https://phoenix.acinq.co/se
 - Add a "Network Access" section summarizing blocked domains if network requests were denied.
 - Ensure all new features, modules, or dependencies are properly documented in the `README.md` file.
 - Always follow the repository's PR submission guidelines and use the PR template located at `.github/pull_request_template.md`.
+- When implementing features, consult the API specifications:
 
 ## PR Quality Gate
 
