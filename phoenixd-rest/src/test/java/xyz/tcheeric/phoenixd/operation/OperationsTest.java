@@ -23,6 +23,7 @@ class OperationsTest {
         }
     }
 
+    // Verifies POST operations set content type and expand path variables
     @Test
     void postOperationSetsContentTypeAndResolvesPath() {
         PostOperation op = new PostOperation("/items/{id}", new PathParam(), "data");
@@ -30,12 +31,14 @@ class OperationsTest {
         assertThat(op.getHttpRequest().uri().getPath()).isEqualTo("/items/123");
     }
 
+    // Ensures POST operations with body still assign content type header
     @Test
     void postOperationWithBodyOnlySetsHeader() {
         PostOperation op = new PostOperation("/items", "data");
         assertThat(op.getHeader("Content-Type")).isEqualTo("application/x-www-form-urlencoded");
     }
 
+    // Confirms constructing a POST operation from an HttpRequest retains the path
     @Test
     void postOperationFromHttpRequest() {
         HttpRequest request = HttpRequest.newBuilder(URI.create("http://localhost/post"))
@@ -45,6 +48,7 @@ class OperationsTest {
         assertThat(op.getHttpRequest().uri().getPath()).isEqualTo("/post");
     }
 
+    // Checks that PATCH operations support adding headers
     @Test
     void patchOperationAddsHeader() {
         PatchOperation op = new PatchOperation("/patch");
@@ -52,6 +56,7 @@ class OperationsTest {
         assertThat(op.getHeader("X-Test")).isEqualTo("value");
     }
 
+    // Validates removing headers from PATCH operations is unsupported
     @Test
     void patchOperationRemoveHeaderThrows() {
         PatchOperation op = new PatchOperation("/patch");
@@ -59,6 +64,7 @@ class OperationsTest {
                 .isInstanceOf(UnsupportedOperationException.class);
     }
 
+    // Ensures DELETE operations allow removal of default headers
     @Test
     void deleteOperationRemovesHeader() {
         DeleteOperation op = new DeleteOperation("/delete");
@@ -67,12 +73,14 @@ class OperationsTest {
         assertThat(op.getHeader("Authorization")).isNull();
     }
 
+    // Verifies DELETE operations resolve path variables from parameters
     @Test
     void deleteOperationWithParamResolvesPath() {
         DeleteOperation op = new DeleteOperation("/items/{id}", new PathParam());
         assertThat(op.getHttpRequest().uri().getPath()).isEqualTo("/items/123");
     }
 
+    // Confirms DELETE operations built from HttpRequest keep the same path
     @Test
     void deleteOperationFromHttpRequest() {
         HttpRequest request = HttpRequest.newBuilder(URI.create("http://localhost/delete"))
@@ -82,6 +90,7 @@ class OperationsTest {
         assertThat(op.getHttpRequest().uri().getPath()).isEqualTo("/delete");
     }
 
+    // Checks GET operations append query parameters for QUERY-kind params
     @Test
     void getOperationWithQueryParamAppendsQuery() {
         class QueryParam extends PathParam {
@@ -94,6 +103,7 @@ class OperationsTest {
         assertThat(op.getHttpRequest().uri().getQuery()).isEqualTo("id=123");
     }
 
+    // Ensures constructors validate against null arguments
     @Test
     void nullArgumentsThrow() {
         assertThatThrownBy(() -> new PostOperation(null, "data")).isInstanceOf(NullPointerException.class);

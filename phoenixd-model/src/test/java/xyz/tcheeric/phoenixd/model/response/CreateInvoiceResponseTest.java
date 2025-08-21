@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class CreateInvoiceResponseTest {
 
+    // Validates fields and string representation for invoice creation responses
     @Test
     void settersGettersAndToString() {
         CreateInvoiceResponse response = new CreateInvoiceResponse();

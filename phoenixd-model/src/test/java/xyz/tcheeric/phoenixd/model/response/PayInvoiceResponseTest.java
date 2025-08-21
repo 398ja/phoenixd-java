@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class PayInvoiceResponseTest {
 
+    // Confirms fields and string output for generic payment invoices
     @Test
     void settersGettersAndToString() {
         PayInvoiceResponse response = new PayInvoiceResponse();

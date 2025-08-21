@@ -18,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class AbstractRequestTest {
 
+    // Parses JSON bodies into response objects
     @Test
     void parsesJsonResponse() throws Exception {
         MockWebServer server = new MockWebServer();
@@ -36,6 +37,7 @@ class AbstractRequestTest {
         }
     }
 
+    // Removes bitcoin prefix from lightning address responses
     @Test
     void handlesLightningAddressWithPrefix() throws Exception {
         MockWebServer server = new MockWebServer();
@@ -53,6 +55,7 @@ class AbstractRequestTest {
         }
     }
 
+    // Accepts lightning addresses returned without any prefix
     @Test
     void handlesLightningAddressWithoutPrefix() throws Exception {
         MockWebServer server = new MockWebServer();
@@ -70,6 +73,7 @@ class AbstractRequestTest {
         }
     }
 
+    // Ensures operations aren't executed when expecting a void response
     @Test
     void voidResponseDoesNotExecuteOperation() {
         class DummyOperation extends AbstractOperation {

@@ -24,6 +24,7 @@ public class CreateBolt11InvoiceRequestTest {
 
     private static final Logger log = Logger.getLogger(CreateBolt11InvoiceRequestTest.class.getName());
 
+    // Checks constructor initializes request with correct path
     @Test
     public void testConstructor() {
         // Arrange and Act
@@ -33,6 +34,7 @@ public class CreateBolt11InvoiceRequestTest {
         assertEquals("/createinvoice", createBolt11InvoiceRequest.getPath());
     }
 
+    // Ensures headers can be added to the underlying operation
     @Test
     public void testAddHeader() {
         // Arrange
@@ -45,6 +47,7 @@ public class CreateBolt11InvoiceRequestTest {
         assertEquals("value", createBolt11InvoiceRequest.getOperation().getHeader("key"));
     }
 
+    // Validates response parsing for a successful invoice creation
     @Test
     public void testGetResponse() throws Exception {
         // Arrange
@@ -65,6 +68,7 @@ public class CreateBolt11InvoiceRequestTest {
         log.log(Level.ALL, "Invoice: {0}", response.getSerialized());
     }
 
+    // Verifies request URI and default headers are set properly
     @Test
     public void testUriAndHeaders() {
         // Arrange
@@ -76,6 +80,7 @@ public class CreateBolt11InvoiceRequestTest {
         assertEquals("application/x-www-form-urlencoded", request.getOperation().getHeader("Content-Type"));
     }
 
+    // Confirms IOExceptions are thrown when server returns an error
     @Test
     public void testErrorHandling() throws Exception {
         HttpServer errorServer = HttpServer.create(new InetSocketAddress(ERROR_SERVER_PORT), 0);

@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class CreateInvoiceParamTest {
 
+    // Ensures toString properly URL-encodes provided values
     @Test
     void toStringEncodesValues() throws MalformedURLException {
         CreateInvoiceParam param = new CreateInvoiceParam();
@@ -26,6 +27,7 @@ class CreateInvoiceParamTest {
                 .contains("webhookUrl=https%3A%2F%2Fexample.com%2Fhook%3Ffoo%3Dbar%26baz%3Dqux");
     }
 
+    // Verifies getters, setters and toString when a webhook URL is supplied
     @Test
     void settersGettersAndToStringWithWebhook() throws Exception {
         CreateInvoiceParam param = new CreateInvoiceParam();
@@ -46,6 +48,7 @@ class CreateInvoiceParamTest {
                 "description=desc&amountSat=1&expirySeconds=2&externalId=id&webhookUrl=https://example.com");
     }
 
+    // Confirms toString omits the webhook URL when it is not set
     @Test
     void toStringWithoutWebhook() {
         CreateInvoiceParam param = new CreateInvoiceParam();

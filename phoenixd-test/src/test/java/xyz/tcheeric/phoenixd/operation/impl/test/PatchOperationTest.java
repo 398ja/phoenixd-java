@@ -31,6 +31,7 @@ public class PatchOperationTest {
         }
     }
 
+    // Ensures PATCH requests use proper method, headers, and response mapping
     @Test
     public void testPatchOperation() {
         TestPatchRequest request = new TestPatchRequest();

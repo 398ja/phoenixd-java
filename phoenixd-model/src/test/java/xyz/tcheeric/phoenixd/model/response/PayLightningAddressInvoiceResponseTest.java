@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class PayLightningAddressInvoiceResponseTest {
 
+    // Checks values and string output for lightning address payment invoices
     @Test
     void settersGettersAndToString() {
         PayLightningAddressInvoiceResponse response = new PayLightningAddressInvoiceResponse();

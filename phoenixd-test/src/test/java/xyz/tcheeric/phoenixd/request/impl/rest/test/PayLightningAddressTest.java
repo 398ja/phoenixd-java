@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(LocalTestServerExtension.class)
 public class PayLightningAddressTest {
 
+    // Validates the request sends correct data and parses the payment response
     @Test
     public void testConstructor() {
         // Arrange
@@ -42,6 +43,7 @@ public class PayLightningAddressTest {
         assertEquals(10, response.getRecipientAmountSat());
     }
 
+    // Checks default URI and headers on the built request
     @Test
     public void testUriAndHeaders() {
         PayLightningAddressParam param = new PayLightningAddressParam();
@@ -55,6 +57,7 @@ public class PayLightningAddressTest {
         assertEquals("application/x-www-form-urlencoded", request.getOperation().getHeader("Content-Type"));
     }
 
+    // Ensures IOExceptions are raised when the server responds with an error
     @Test
     public void testErrorHandling() throws Exception {
         HttpServer errorServer = HttpServer.create(new InetSocketAddress(9751), 0);

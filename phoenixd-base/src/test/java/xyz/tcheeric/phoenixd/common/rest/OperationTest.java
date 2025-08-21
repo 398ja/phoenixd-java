@@ -11,6 +11,7 @@ class OperationTest {
         String slug = "abc";
     }
 
+    // Checks that path variables are replaced with matching parameter fields
     @Test
     void replacePathVariablesSubstitutesFields() throws Exception {
         Operation op = new Operation() {

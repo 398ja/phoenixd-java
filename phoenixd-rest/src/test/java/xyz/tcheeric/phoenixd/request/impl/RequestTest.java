@@ -23,6 +23,7 @@ class RequestTest {
         }
     }
 
+    // Verifies header management and path substitution for POST and DELETE requests
     @Test
     void postAndDeleteRequestHeaders() {
         PostRequest<VoidRequestParam, VoidResponse> post = new PostRequest<>("/post", "body");
@@ -49,6 +50,7 @@ class RequestTest {
         assertThat(deleteWithParam.getParam()).isNotNull();
     }
 
+    // Checks GET and PATCH requests handle parameters and paths
     @Test
     void getAndPatchRequestConstructors() {
         GetRequest<VoidRequestParam, VoidResponse> getNoParam = new GetRequest<>("/get");
@@ -63,6 +65,7 @@ class RequestTest {
         assertThat(patch.getParam()).isNotNull();
     }
 
+    // Ensures specialized request subclasses can be constructed
     @Test
     void specializedRequestsConstructors() {
         CreateInvoiceParam createParam = new CreateInvoiceParam();
@@ -76,6 +79,7 @@ class RequestTest {
         new GetLightningAddressRequest();
     }
 
+    // Confirms POST request constructors throw on null arguments
     @Test
     void postRequestNullArgumentsThrow() {
         DummyParam param = new DummyParam();
@@ -91,6 +95,7 @@ class RequestTest {
                 .isInstanceOf(NullPointerException.class);
     }
 
+    // Validates other request types enforce non-null parameters
     @Test
     void otherRequestsNullArgumentsThrow() {
         DummyParam param = new DummyParam();

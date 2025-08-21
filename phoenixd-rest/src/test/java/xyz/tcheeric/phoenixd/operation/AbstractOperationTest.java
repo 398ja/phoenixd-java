@@ -13,6 +13,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class AbstractOperationTest {
 
+    // Confirms operations execute once and capture the response body
     @Test
     void executeMakesSingleNetworkCall() throws Exception {
         MockWebServer server = new MockWebServer();
@@ -34,6 +35,7 @@ public class AbstractOperationTest {
         }
     }
 
+    // Ensures non-success HTTP status codes trigger exceptions
     @Test
     void executeThrowsOnNon2xxResponse() throws Exception {
         MockWebServer server = new MockWebServer();
@@ -48,6 +50,7 @@ public class AbstractOperationTest {
         }
     }
 
+    // Verifies adding a header replaces any existing value
     @Test
     void addHeaderReplacesExisting() {
         PostOperation op = new PostOperation("/items", "data");
@@ -57,6 +60,7 @@ public class AbstractOperationTest {
         assertThat(original).isNotEqualTo(op.getHeader("Authorization"));
     }
 
+    // Checks that removing headers from a POST operation is unsupported
     @Test
     void removeHeaderUnsupported() {
         PostOperation op = new PostOperation("/items", "data");
