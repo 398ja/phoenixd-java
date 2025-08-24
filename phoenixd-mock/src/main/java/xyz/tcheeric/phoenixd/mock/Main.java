@@ -17,7 +17,7 @@ public class Main {
         }
 
         // Start the mock server
-        LocalTestServer server = new LocalTestServer(port);
+        MockLnServer server = new MockLnServer(port);
 
         // Stop server on Ctrl+C (SIGINT) or normal JVM shutdown
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {

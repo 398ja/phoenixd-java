@@ -10,7 +10,7 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 
 @RequiredArgsConstructor
-public class LocalTestServer {
+public class MockLnServer {
     private HttpServer server;
 
     private final int port;
