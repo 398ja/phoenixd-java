@@ -26,6 +26,15 @@ Artifacts are published to a Reposilite server. Add the repository to your Maven
 - A running instance of `phoenixd`
 - A valid Lightning address (for test runs)
 
+## Docker
+Build and publish the `phoenixd-rest` container image with the Jib Maven plugin:
+
+```bash
+./mvnw deploy -pl phoenixd-rest -am
+```
+
+This pushes `docker.398ja.xyz/phoenixd-rest` to the registry. See [Docker](docs/how-to/docker.md) for details.
+
 ## Documentation
 - Reference: [phoenixd REST API](https://phoenix.acinq.co/server/api)
 - How-to guides:
