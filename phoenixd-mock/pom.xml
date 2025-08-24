@@ -55,6 +55,42 @@
             <version>${slf4j.version}</version>
             <scope>runtime</scope>
         </dependency>
-
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.google.cloud.tools</groupId>
+                <artifactId>jib-maven-plugin</artifactId>
+                <version>3.4.1</version>
+                <configuration>
+                    <from>
+                        <image>gcr.io/distroless/java21</image>
+                    </from>
+                    <to>
+                        <image>docker.398ja.xyz/phoenixd-mock</image>
+                        <tags>
+                            <tag>${project.version}</tag>
+                        </tags>
+                    </to>
+                    <containerizingMode>packaged</containerizingMode>
+                    <container>
+                        <entrypoint>
+                            <shell>java -jar /app.jar</shell>
+                        </entrypoint>
+                    </container>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>jib-build</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>build</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
 </project>
