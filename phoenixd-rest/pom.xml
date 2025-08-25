@@ -71,6 +71,7 @@
                         <image>docker.398ja.xyz/phoenixd-rest</image>
                         <tags>
                             <tag>${project.version}</tag>
+                            <tag>latest</tag>
                         </tags>
                     </to>
                     <containerizingMode>packaged</containerizingMode>
