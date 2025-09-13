@@ -4,20 +4,20 @@ import lombok.Data;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import org.apache.commons.configuration2.PropertiesConfiguration;
-import org.apache.commons.configuration2.builder.fluent.Configurations;
 
+import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
+import java.util.Set;
 
 @RequiredArgsConstructor
 @Data
 public class Configuration {
 
     private final @NonNull String prefix;
-    private final PropertiesConfiguration properties;
+    private final Properties properties;
 
     private String envKey(@NonNull String key) {
         return (prefix + "_" + key).toUpperCase().replace('.', '_');
@@ -33,29 +33,41 @@ public class Configuration {
         if (env != null) {
             return env;
         }
-        return properties.getString(prefix + "." + key, null);
+        return properties.getProperty(prefix + "." + key);
     }
 
     @SneakyThrows
     public Configuration(@NonNull String prefix, @NonNull URL fileUrl) {
         this.prefix = prefix;
-            this.properties = new Configurations().properties(fileUrl);
+        this.properties = new Properties();
+        try (InputStream in = fileUrl.openStream()) {
+            if (in != null) {
+                this.properties.load(in);
+            }
+        }
     }
 
     @SneakyThrows
     public Configuration(@NonNull String prefix) {
         this.prefix = prefix;
-        this.properties = new Configurations().properties(getClass().getResource("/app.properties"));
+        this.properties = new Properties();
+        URL resource = getClass().getResource("/app.properties");
+        if (resource != null) {
+            try (InputStream in = resource.openStream()) {
+                if (in != null) {
+                    this.properties.load(in);
+                }
+            }
+        }
     }
 
     public List<String> keys() {
         List<String> result = new ArrayList<>();
-        Iterator<String> keysIterator = properties.getKeys(prefix);
-        while (keysIterator.hasNext()) {
-            String key = keysIterator.next();
-            if (key.startsWith(prefix + ".")) {
-                String strippedKey = key.substring(prefix.length() + 1); // +1 for the dot
-                result.add(strippedKey);
+        Set<String> names = properties.stringPropertyNames();
+        String prefixDot = prefix + ".";
+        for (String key : names) {
+            if (key.startsWith(prefixDot)) {
+                result.add(key.substring(prefixDot.length()));
             }
         }
         return result;
