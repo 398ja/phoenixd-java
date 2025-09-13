@@ -1,0 +1,44 @@
+# Changelog
+
+## 0.1.1 — 2025-09-13
+
+### Highlights
+- Fixes “URI with undefined scheme” when `phoenixd.base_url` lacks an HTTP scheme by defaulting to `http://`.
+- Centralizes configuration via shared `Configuration` util (env vars take precedence over `app.properties`).
+
+### Changes
+- fix: normalize base_url scheme and use shared Configuration
+  - F:phoenixd-rest/src/main/java/xyz/tcheeric/phoenixd/operation/AbstractOperation.java
+  - F:phoenixd-rest/src/test/java/xyz/tcheeric/phoenixd/operation/BaseUrlNormalizationTest.java
+  - F:phoenixd-test/src/test/java/xyz/tcheeric/phoenixd/test/TestUtils.java
+- docs: document scheme defaulting for `phoenixd.base_url`
+  - F:docs/reference/configuration.md
+- build: bump version to 0.1.1
+  - F:pom.xml
+  - F:phoenixd-rest/pom.xml
+  - F:phoenixd-test/pom.xml
+  - F:phoenixd-base/pom.xml
+  - F:phoenixd-model/pom.xml
+  - F:phoenixd-mock/pom.xml
+
+### Behavior Notes
+- `phoenixd.base_url` without a scheme now resolves as `http://...`.
+- If `phoenixd.base_url` is unset or blank, an `IllegalArgumentException` is thrown during request construction.
+
+### Configuration
+- Env vars (preferred): `PHOENIXD_USERNAME`, `PHOENIXD_PASSWORD`, `PHOENIXD_BASE_URL`, `PHOENIXD_TIMEOUT`.
+- Or `app.properties` on the classpath with `phoenixd.username`, `phoenixd.password`, `phoenixd.base_url`, `phoenixd.timeout`.
+
+### Testing
+- Command: `mvn -q verify`
+- Note: In restricted sandboxes, tests that open loopback sockets (MockWebServer) may fail with `SocketException: Operation not permitted`. In a normal dev/CI environment, the test suite is expected to pass.
+
+### API Changes
+- None.
+
+### Security
+- No new dependencies; no changes to security-sensitive logic.
+
+### Migration
+- No breaking changes. If you relied on rejecting schemeless base URLs, be aware they now default to `http://`.
+
