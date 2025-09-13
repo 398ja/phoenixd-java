@@ -15,7 +15,6 @@ A simple Java client for ACINQ's [phoenixd REST API](https://phoenix.acinq.co/se
     - [Design Patterns](https://github.com/iluwatar/java-design-patterns)
         - Follow design patterns as described in the book, whenever possible.
 - When commiting code, follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification.
-- When adding new features, ensure they are compliant with the Cashu specification (NUTs) provided above.
 
 ## Documentation
 
