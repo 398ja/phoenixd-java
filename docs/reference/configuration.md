@@ -20,7 +20,7 @@ Configuration can also be supplied through an `app.properties` file on the class
 |-----|--------|---------|-------|
 | `phoenixd.username` | String | empty | Username for basic authentication. |
 | `phoenixd.password` | String | empty | Password for basic authentication. Store securely. |
-| `phoenixd.base_url` | URL | empty | Base address of the API endpoint. |
+| `phoenixd.base_url` | URL | empty | Base address of the API endpoint. If no scheme is provided, `http://` is assumed. |
 | `phoenixd.timeout` | Integer (ms) | `5000` | HTTP request timeout. |
 | `phoenixd.webhook_secret` | String | empty | Optional secret used to validate webhook callbacks. Treat as a secret. |
 

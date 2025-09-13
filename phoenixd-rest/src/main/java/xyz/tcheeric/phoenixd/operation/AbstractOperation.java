@@ -6,6 +6,7 @@ import lombok.SneakyThrows;
 import xyz.tcheeric.phoenixd.operation.impl.PostOperation;
 import xyz.tcheeric.phoenixd.common.rest.Operation;
 import xyz.tcheeric.phoenixd.common.rest.Request;
+import xyz.tcheeric.phoenixd.common.rest.util.Configuration;
 
 import java.io.IOException;
 import java.net.URI;
@@ -19,7 +20,6 @@ import java.time.Duration;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -32,34 +32,34 @@ public abstract class AbstractOperation implements Operation {
     private String requestData;
 
     public static final long DEFAULT_TIMEOUT = 5000L;
-    private static final String PREFIX = "phoenixd.";
-    private static final Properties CONFIG = loadConfig();
-
-    @SneakyThrows
-    private static Properties loadConfig() {
-        Properties props = new Properties();
-        try (var stream = AbstractOperation.class.getResourceAsStream("/app.properties")) {
-            if (stream != null) {
-                props.load(stream);
-            }
-        }
-        return props;
-    }
+    private static final String PREFIX = "phoenixd";
+    private static final Configuration CONFIG = new Configuration(PREFIX);
 
     private static String getProperty(String key) {
-        return CONFIG.getProperty(PREFIX + key);
+        return CONFIG.get(key);
     }
 
     private static long getLongProperty(String key, long defaultValue) {
-        String value = CONFIG.getProperty(PREFIX + key);
-        if (value == null) {
-            return defaultValue;
+        Long value = CONFIG.getLong(key, defaultValue);
+        return value != null ? value : defaultValue;
+    }
+
+    private static String ensureScheme(String baseUrl) {
+        if (baseUrl == null || baseUrl.isBlank()) {
+            throw new IllegalArgumentException("phoenixd.base_url is not set");
         }
-        try {
-            return Long.parseLong(value);
-        } catch (NumberFormatException e) {
-            return defaultValue;
+        String trimmed = baseUrl.trim();
+        String lower = trimmed.toLowerCase();
+        if (lower.startsWith("http://") || lower.startsWith("https://")) {
+            return trimmed;
         }
+        return "http://" + trimmed;
+    }
+
+    private static URI buildUri(String baseUrl, String path) {
+        String normalizedBase = ensureScheme(baseUrl);
+        String normalizedPath = (path == null || path.isEmpty()) ? "/" : (path.startsWith("/") ? path : "/" + path);
+        return URI.create(normalizedBase).resolve(normalizedPath);
     }
 
     public AbstractOperation(@NonNull HttpRequest httpRequest) {
@@ -80,7 +80,7 @@ public abstract class AbstractOperation implements Operation {
         HttpRequest.BodyPublisher bodyPublisher = requestData == null ? HttpRequest.BodyPublishers.noBody() : HttpRequest.BodyPublishers.ofString(requestData);
 
         this.httpRequest = HttpRequest.newBuilder()
-                .uri(URI.create(baseUrl + path))
+                .uri(buildUri(baseUrl, path))
                 .header("Authorization", "Basic " + encodedAuth)
                 .timeout(Duration.ofMillis(timeout))
                 .method(method, bodyPublisher)
@@ -107,7 +107,7 @@ public abstract class AbstractOperation implements Operation {
         }
 
         this.httpRequest = HttpRequest.newBuilder()
-                .uri(URI.create(baseUrl + resolvedPath))
+                .uri(buildUri(baseUrl, resolvedPath))
                 .header("Authorization", "Basic " + encodedAuth)
                 .timeout(Duration.ofMillis(timeout))
                 .method(method, bodyPublisher)
