@@ -30,9 +30,9 @@ public class Configuration {
 
     private String resolve(@NonNull String key) {
         String env = envValue(key);
-        if (env != null) {
-            return env;
-        }
+        if (env != null) return env;
+        String sys = System.getProperty(prefix + "." + key);
+        if (sys != null && !sys.isEmpty()) return sys;
         return properties.getProperty(prefix + "." + key);
     }
 
@@ -51,7 +51,13 @@ public class Configuration {
     public Configuration(@NonNull String prefix) {
         this.prefix = prefix;
         this.properties = new Properties();
-        URL resource = getClass().getResource("/app.properties");
+        // Try thread context classloader first (works well in app servers and Spring Boot)
+        ClassLoader tccl = Thread.currentThread().getContextClassLoader();
+        URL resource = (tccl != null) ? tccl.getResource("app.properties") : null;
+        if (resource == null) {
+            // Fallback to this class' loader
+            resource = getClass().getResource("/app.properties");
+        }
         if (resource != null) {
             try (InputStream in = resource.openStream()) {
                 if (in != null) {
