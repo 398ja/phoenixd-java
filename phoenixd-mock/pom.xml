@@ -33,6 +33,10 @@
             <id>reposilite-releases</id>
             <url>https://maven.398ja.xyz/releases</url>
         </repository>
+        <repository>
+            <id>reposilite-snapshots</id>
+            <url>https://maven.398ja.xyz/snapshots</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -69,7 +73,7 @@
                     <containerizingMode>packaged</containerizingMode>
                     <container>
                         <entrypoint>
-				<shell>java -jar /app/app.jar</shell>
+				            <shell>java -jar /app/app.jar</shell>
                         </entrypoint>
                     </container>
                 </configuration>
