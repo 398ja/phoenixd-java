@@ -22,7 +22,7 @@
         <dependency>
             <groupId>commons-beanutils</groupId>
             <artifactId>commons-beanutils</artifactId>
-            <version>1.9.4</version> <!-- Use the latest stable version -->
+            <version>${commons.beanutils.version}</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
