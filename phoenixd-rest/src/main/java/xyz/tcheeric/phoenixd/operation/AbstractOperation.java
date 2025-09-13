@@ -36,7 +36,7 @@ public abstract class AbstractOperation implements Operation {
     private static final Configuration CONFIG = new Configuration(PREFIX);
 
     private static String getProperty(String key) {
-        return CONFIG.get(PREFIX + "." + key);
+        return CONFIG.get(key);
     }
 
     private static long getLongProperty(String key, long defaultValue) {
