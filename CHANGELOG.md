@@ -41,4 +41,11 @@
 
 ### Migration
 - No breaking changes. If you relied on rejecting schemeless base URLs, be aware they now default to `http://`.
+## 0.1.2 — 2025-09-13
+
+### Fixes
+- Add explicit `commons-lang3` runtime dependency required by `commons-configuration2` to prevent `NoClassDefFoundError: org/apache/commons/lang3/SystemProperties` in consumer apps.
+
+### Notes
+- If you previously consumed `0.1.1`, update to `0.1.2` to pick up the dependency fix. Dependency metadata for `0.1.1` may be cached by your build; a version bump ensures the fix is resolved.
 
