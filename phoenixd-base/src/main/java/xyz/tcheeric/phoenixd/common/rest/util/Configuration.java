@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.InputStream;
 import java.net.URL;
@@ -13,6 +14,7 @@ import java.util.Properties;
 import java.util.Set;
 
 @RequiredArgsConstructor
+@Slf4j
 @Data
 public class Configuration {
 
@@ -30,10 +32,18 @@ public class Configuration {
 
     private String resolve(@NonNull String key) {
         String env = envValue(key);
-        if (env != null) return env;
+        if (env != null) {
+            if (log.isDebugEnabled()) log.debug("Config '{}' resolved from ENV", key);
+            return env;
+        }
         String sys = System.getProperty(prefix + "." + key);
-        if (sys != null && !sys.isEmpty()) return sys;
-        return properties.getProperty(prefix + "." + key);
+        if (sys != null && !sys.isEmpty()) {
+            if (log.isDebugEnabled()) log.debug("Config '{}' resolved from system properties", key);
+            return sys;
+        }
+        String fileVal = properties.getProperty(prefix + "." + key);
+        if (fileVal != null && log.isDebugEnabled()) log.debug("Config '{}' resolved from app.properties", key);
+        return fileVal;
     }
 
     @SneakyThrows
@@ -62,8 +72,12 @@ public class Configuration {
             try (InputStream in = resource.openStream()) {
                 if (in != null) {
                     this.properties.load(in);
+                    if (log.isInfoEnabled()) log.info("Loaded configuration from '{}'", resource);
                 }
             }
+        }
+        if (properties.isEmpty()) {
+            log.warn("No app.properties found on classpath; relying on ENV and system properties only");
         }
     }
 

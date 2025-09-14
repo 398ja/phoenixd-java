@@ -4,12 +4,12 @@
     <parent>
         <groupId>xyz.tcheeric</groupId>
         <artifactId>phoenixd-java</artifactId>
-        <version>0.1.2</version>
+        <version>0.1.3</version>
     </parent>
 
     <artifactId>phoenixd-rest</artifactId>
     <packaging>jar</packaging>
-    <version>0.1.2</version>
+    <version>0.1.3</version>
     <name>phoenixd-rest</name>
     <url>https://maven.apache.org</url>
 
@@ -18,6 +18,16 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>${slf4j.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>phoenixd-model</artifactId>
@@ -59,6 +69,16 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <systemPropertyVariables>
+                        <org.slf4j.simpleLogger.defaultLogLevel>debug</org.slf4j.simpleLogger.defaultLogLevel>
+                        <org.slf4j.simpleLogger.log.xyz.tcheeric>debug</org.slf4j.simpleLogger.log.xyz.tcheeric>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>com.google.cloud.tools</groupId>
                 <artifactId>jib-maven-plugin</artifactId>

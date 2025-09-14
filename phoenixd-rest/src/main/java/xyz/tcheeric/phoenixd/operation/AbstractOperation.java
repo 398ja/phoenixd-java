@@ -3,6 +3,7 @@ package xyz.tcheeric.phoenixd.operation;
 import lombok.Data;
 import lombok.NonNull;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import xyz.tcheeric.phoenixd.operation.impl.PostOperation;
 import xyz.tcheeric.phoenixd.common.rest.Operation;
 import xyz.tcheeric.phoenixd.common.rest.Request;
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Data
+@Slf4j
 public abstract class AbstractOperation implements Operation {
 
     protected HttpRequest httpRequest;
@@ -46,6 +48,7 @@ public abstract class AbstractOperation implements Operation {
 
     private static String ensureScheme(String baseUrl) {
         if (baseUrl == null || baseUrl.isBlank()) {
+            log.error("Missing required configuration 'phoenixd.base_url'");
             throw new IllegalArgumentException("phoenixd.base_url is not set");
         }
         String trimmed = baseUrl.trim();
@@ -53,6 +56,7 @@ public abstract class AbstractOperation implements Operation {
         if (lower.startsWith("http://") || lower.startsWith("https://")) {
             return trimmed;
         }
+        if (log.isDebugEnabled()) log.debug("No scheme in base_url '{}', defaulting to http://", baseUrl);
         return "http://" + trimmed;
     }
 
@@ -85,6 +89,9 @@ public abstract class AbstractOperation implements Operation {
                 .timeout(Duration.ofMillis(timeout))
                 .method(method, bodyPublisher)
                 .build();
+        if (log.isDebugEnabled()) {
+            log.debug("Prepared HTTP request: method={}, uri={}, timeoutMs={}", method, this.httpRequest.uri(), timeout);
+        }
     }
 
     @SneakyThrows
@@ -112,19 +119,30 @@ public abstract class AbstractOperation implements Operation {
                 .timeout(Duration.ofMillis(timeout))
                 .method(method, bodyPublisher)
                 .build();
+        if (log.isDebugEnabled()) {
+            log.debug("Prepared HTTP request: method={}, uri={}, timeoutMs={} (with params)", method, this.httpRequest.uri(), timeout);
+        }
     }
 
     @SneakyThrows
     @Override
     public Operation execute() {
+        if (log.isDebugEnabled()) {
+            log.debug("Sending HTTP request: {} {}", httpRequest.method(), httpRequest.uri());
+        }
         CompletableFuture<HttpResponse<String>> response = HttpClient.newBuilder()
                 .build()
                 .sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString());
         HttpResponse<String> httpResp = response.get();
         this.responseBody = httpResp.body();
         var statusCode = httpResp.statusCode();
+        if (log.isDebugEnabled()) {
+            log.debug("Received response: status={} uri={}", statusCode, httpRequest.uri());
+        }
         if (statusCode < 200 || statusCode >= 300) {
-            throw new IOException("Failed to create invoice: " + statusCode + " " + responseBody);
+            String preview = responseBody == null ? "" : (responseBody.length() > 512 ? responseBody.substring(0, 512) + "..." : responseBody);
+            log.error("HTTP request failed: status={} uri={} bodyPreview={}", statusCode, httpRequest.uri(), preview);
+            throw new IOException("Failed HTTP request: " + statusCode + " " + preview);
         }
         return this;
     }
@@ -154,6 +172,10 @@ public abstract class AbstractOperation implements Operation {
                 .build();
 
         this.setHttpRequest(newHttpRequest);
+        if (log.isDebugEnabled()) {
+            String safeVal = key.equalsIgnoreCase("Authorization") ? "<redacted>" : value;
+            log.debug("Updated header: {}={} for {} {}", key, safeVal, httpRequest.method(), httpRequest.uri());
+        }
 
         return this;
     }
@@ -184,6 +206,9 @@ public abstract class AbstractOperation implements Operation {
             } catch (IllegalAccessException e) {
                 throw new RuntimeException(e);
             }
+        }
+        if (log.isDebugEnabled()) {
+            log.debug("Resolved path with variables: {}", path);
         }
         return path;
     }

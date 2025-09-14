@@ -48,4 +48,14 @@
 
 ### Notes
 - If you previously consumed `0.1.1`, update to `0.1.2` to pick up the dependency fix. Dependency metadata for `0.1.1` may be cached by your build; a version bump ensures the fix is resolved.
+## 0.1.3 — 2025-09-13
+
+### Enhancements
+- Add structured logging via Lombok `@Slf4j` in core components.
+  - Logs config resolution source (ENV, system property, file) and file load location.
+  - Logs HTTP requests (method, URI, timeout) and responses (status), with safe truncation and redaction.
+- Improve configuration discovery in fat jars/containers: try TCCL first, then class loader; support JVM system properties.
+
+### Notes
+- Enable debug logs with `logging.level.xyz.tcheeric=DEBUG` to see detailed request and configuration traces.
 
