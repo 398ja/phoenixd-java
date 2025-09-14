@@ -46,3 +46,4 @@ version and `latest`, allowing consumers to pull the most recent build without s
   - [Docker](docs/how-to/docker.md)
   - [Code coverage](docs/how-to/coverage.md)
   - [Release](docs/how-to/release.md)
+  - [Logging](docs/reference/logging.md)

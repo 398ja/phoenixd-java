@@ -2,6 +2,7 @@ package xyz.tcheeric.phoenixd.operation.impl;
 
 import lombok.NonNull;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import xyz.tcheeric.phoenixd.common.rest.Operation;
 import xyz.tcheeric.phoenixd.common.rest.Request;
 import xyz.tcheeric.phoenixd.common.rest.util.Constants;
@@ -11,6 +12,7 @@ import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.Builder;
 
+@Slf4j
 public class DeleteOperation extends AbstractOperation {
 
     public DeleteOperation(HttpRequest httpRequest) {
@@ -20,11 +22,13 @@ public class DeleteOperation extends AbstractOperation {
     @SneakyThrows
     public DeleteOperation(@NonNull String path) {
         super(Constants.HTTP_DELETE_METHOD, path, null);
+        if (log.isDebugEnabled()) log.debug("Initialized DELETE operation for path={}", path);
     }
 
     @SneakyThrows
     public DeleteOperation(@NonNull String path, @NonNull Request.Param requestParam) {
         super(Constants.HTTP_DELETE_METHOD, path, requestParam, null);
+        if (log.isDebugEnabled()) log.debug("Initialized DELETE operation for path={} with params", path);
     }
 
     @Override
@@ -40,6 +44,7 @@ public class DeleteOperation extends AbstractOperation {
         });
 
         this.httpRequest = requestBuilder.build();
+        if (log.isDebugEnabled()) log.debug("Removed header '{}' from DELETE request {} {}", key, httpRequest.method(), httpRequest.uri());
         return this;
     }
 
