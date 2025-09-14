@@ -58,4 +58,9 @@
 
 ### Notes
 - Enable debug logs with `logging.level.xyz.tcheeric=DEBUG` to see detailed request and configuration traces.
+## 0.1.4 — 2025-09-13
+
+### Enhancements
+- Add default logging configuration for SLF4J Simple in phoenixd-rest (`simplelogger.properties`).
+- Document logging usage and configuration.
 

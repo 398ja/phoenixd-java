@@ -4,12 +4,12 @@
     <parent>
         <groupId>xyz.tcheeric</groupId>
         <artifactId>phoenixd-java</artifactId>
-        <version>0.1.3</version>
+        <version>0.1.4</version>
     </parent>
 
     <artifactId>phoenixd-rest</artifactId>
     <packaging>jar</packaging>
-    <version>0.1.3</version>
+    <version>0.1.4</version>
     <name>phoenixd-rest</name>
     <url>https://maven.apache.org</url>
 
