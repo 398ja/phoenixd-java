@@ -44,7 +44,10 @@ public class MockLnServer {
     }
 
     private void handleCreateInvoice(HttpExchange exchange) throws IOException {
-        writeJson(exchange, "{\"amountSat\":10,\"paymentHash\":\"hash\",\"serialized\":\"invoice\"}");
+        // Generate a unique mock bolt11 invoice
+        String invoiceId = Long.toHexString(System.nanoTime());
+        String bolt11 = "lnbc1mock" + invoiceId;
+        writeJson(exchange, "{\"amountSat\":10,\"paymentHash\":\"hash" + invoiceId + "\",\"serialized\":\"" + bolt11 + "\"}");
     }
 
     private void handleDecodeInvoice(HttpExchange exchange) throws IOException {
