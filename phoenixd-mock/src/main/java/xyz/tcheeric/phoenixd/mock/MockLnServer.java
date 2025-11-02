@@ -12,8 +12,12 @@ import java.security.SecureRandom;
 
 @RequiredArgsConstructor
 public class MockLnServer {
-    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
-    
+    /**
+     * Bech32 generator values used in checksum calculation.
+     * These are fixed values defined by the Bech32 specification.
+     */
+    private static final int[] BECH32_GENERATOR = {0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3};
+
     private HttpServer server;
 
     private final int port;
@@ -68,7 +72,6 @@ public class MockLnServer {
         // For a minimal valid invoice, we need at least timestamp + payment hash
         // Bech32 charset: qpzry9x8gf2tvdw0s3jn54khce6mua7l
         StringBuilder data = new StringBuilder();
-        String charset = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
 
         // Generate 52 random bech32 characters (represents ~32 bytes of data)
         for (int i = 0; i < 52; i++) {
@@ -86,8 +89,6 @@ public class MockLnServer {
      * Simplified implementation for mock purposes.
      */
     private String calculateBech32Checksum(String hrp, String data) {
-        String charset = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
-
         // Expand HRP
         int[] values = new int[hrp.length() * 2 + 1 + data.length() + 6];
         int idx = 0;
@@ -99,7 +100,7 @@ public class MockLnServer {
             values[idx++] = hrp.charAt(i) & 31;
         }
         for (int i = 0; i < data.length(); i++) {
-            values[idx++] = charset.indexOf(data.charAt(i));
+            values[idx++] = BECH32_CHARSET.indexOf(data.charAt(i));
         }
         for (int i = 0; i < 6; i++) {
             values[idx++] = 0;
@@ -110,7 +111,7 @@ public class MockLnServer {
 
         StringBuilder checksum = new StringBuilder();
         for (int i = 0; i < 6; i++) {
-            checksum.append(charset.charAt((polymod >> (5 * (5 - i))) & 31));
+            checksum.append(BECH32_CHARSET.charAt((polymod >> (5 * (5 - i))) & 31));
         }
 
         return checksum.toString();
@@ -120,14 +121,13 @@ public class MockLnServer {
      * Bech32 polymod function for checksum calculation.
      */
     private int polymod(int[] values) {
-        int[] gen = {0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3};
         int chk = 1;
         for (int value : values) {
             int top = chk >> 25;
             chk = (chk & 0x1ffffff) << 5 ^ value;
             for (int i = 0; i < 5; i++) {
                 if (((top >> i) & 1) != 0) {
-                    chk ^= gen[i];
+                    chk ^= BECH32_GENERATOR[i];
                 }
             }
         }
