@@ -12,6 +12,8 @@ import java.security.SecureRandom;
 
 @RequiredArgsConstructor
 public class MockLnServer {
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+    
     private HttpServer server;
 
     private final int port;
@@ -65,13 +67,12 @@ public class MockLnServer {
         // Generate random payment hash (32 bytes = 52 chars in bech32, roughly)
         // For a minimal valid invoice, we need at least timestamp + payment hash
         // Bech32 charset: qpzry9x8gf2tvdw0s3jn54khce6mua7l
-        SecureRandom random = new SecureRandom();
         StringBuilder data = new StringBuilder();
         String charset = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
 
         // Generate 52 random bech32 characters (represents ~32 bytes of data)
         for (int i = 0; i < 52; i++) {
-            data.append(charset.charAt(random.nextInt(charset.length())));
+            data.append(charset.charAt(SECURE_RANDOM.nextInt(charset.length())));
         }
 
         // Calculate and append Bech32 checksum (6 characters)
