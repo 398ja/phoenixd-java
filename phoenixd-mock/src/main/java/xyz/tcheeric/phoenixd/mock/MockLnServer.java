@@ -12,6 +12,8 @@ import java.security.SecureRandom;
 
 @RequiredArgsConstructor
 public class MockLnServer {
+    private static final String BECH32_CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
+    
     private HttpServer server;
 
     private final int port;
@@ -64,14 +66,12 @@ public class MockLnServer {
 
         // Generate random payment hash (32 bytes = 52 chars in bech32, roughly)
         // For a minimal valid invoice, we need at least timestamp + payment hash
-        // Bech32 charset: qpzry9x8gf2tvdw0s3jn54khce6mua7l
         SecureRandom random = new SecureRandom();
         StringBuilder data = new StringBuilder();
-        String charset = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
 
         // Generate 52 random bech32 characters (represents ~32 bytes of data)
         for (int i = 0; i < 52; i++) {
-            data.append(charset.charAt(random.nextInt(charset.length())));
+            data.append(BECH32_CHARSET.charAt(random.nextInt(BECH32_CHARSET.length())));
         }
 
         // Calculate and append Bech32 checksum (6 characters)
@@ -85,8 +85,6 @@ public class MockLnServer {
      * Simplified implementation for mock purposes.
      */
     private String calculateBech32Checksum(String hrp, String data) {
-        String charset = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
-
         // Expand HRP
         int[] values = new int[hrp.length() * 2 + 1 + data.length() + 6];
         int idx = 0;
@@ -98,7 +96,7 @@ public class MockLnServer {
             values[idx++] = hrp.charAt(i) & 31;
         }
         for (int i = 0; i < data.length(); i++) {
-            values[idx++] = charset.indexOf(data.charAt(i));
+            values[idx++] = BECH32_CHARSET.indexOf(data.charAt(i));
         }
         for (int i = 0; i < 6; i++) {
             values[idx++] = 0;
@@ -109,7 +107,7 @@ public class MockLnServer {
 
         StringBuilder checksum = new StringBuilder();
         for (int i = 0; i < 6; i++) {
-            checksum.append(charset.charAt((polymod >> (5 * (5 - i))) & 31));
+            checksum.append(BECH32_CHARSET.charAt((polymod >> (5 * (5 - i))) & 31));
         }
 
         return checksum.toString();
