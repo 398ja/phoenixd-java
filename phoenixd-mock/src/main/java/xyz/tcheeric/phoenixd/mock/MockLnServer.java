@@ -70,12 +70,12 @@ public class MockLnServer {
 
         // Generate random payment hash (32 bytes = 52 chars in bech32, roughly)
         // For a minimal valid invoice, we need at least timestamp + payment hash
-        SecureRandom random = new SecureRandom();
+        // Bech32 charset: qpzry9x8gf2tvdw0s3jn54khce6mua7l
         StringBuilder data = new StringBuilder();
 
         // Generate 52 random bech32 characters (represents ~32 bytes of data)
         for (int i = 0; i < 52; i++) {
-            data.append(BECH32_CHARSET.charAt(random.nextInt(BECH32_CHARSET.length())));
+            data.append(charset.charAt(SECURE_RANDOM.nextInt(charset.length())));
         }
 
         // Calculate and append Bech32 checksum (6 characters)
