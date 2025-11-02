@@ -12,8 +12,12 @@ import java.security.SecureRandom;
 
 @RequiredArgsConstructor
 public class MockLnServer {
-    private static final String BECH32_CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
-    
+    /**
+     * Bech32 generator values used in checksum calculation.
+     * These are fixed values defined by the Bech32 specification.
+     */
+    private static final int[] BECH32_GENERATOR = {0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3};
+
     private HttpServer server;
 
     private final int port;
@@ -117,14 +121,13 @@ public class MockLnServer {
      * Bech32 polymod function for checksum calculation.
      */
     private int polymod(int[] values) {
-        int[] gen = {0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3};
         int chk = 1;
         for (int value : values) {
             int top = chk >> 25;
             chk = (chk & 0x1ffffff) << 5 ^ value;
             for (int i = 0; i < 5; i++) {
                 if (((top >> i) & 1) != 0) {
-                    chk ^= gen[i];
+                    chk ^= BECH32_GENERATOR[i];
                 }
             }
         }
