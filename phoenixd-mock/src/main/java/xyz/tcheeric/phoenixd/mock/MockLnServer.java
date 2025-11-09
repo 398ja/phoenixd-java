@@ -13,10 +13,20 @@ import java.security.SecureRandom;
 @RequiredArgsConstructor
 public class MockLnServer {
     /**
+     * Bech32 character set used for encoding/decoding.
+     */
+    private static final String BECH32_CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
+
+    /**
      * Bech32 generator values used in checksum calculation.
      * These are fixed values defined by the Bech32 specification.
      */
     private static final int[] BECH32_GENERATOR = {0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3};
+
+    /**
+     * Secure random instance for generating random invoice data.
+     */
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private HttpServer server;
 
@@ -75,7 +85,7 @@ public class MockLnServer {
 
         // Generate 52 random bech32 characters (represents ~32 bytes of data)
         for (int i = 0; i < 52; i++) {
-            data.append(charset.charAt(SECURE_RANDOM.nextInt(charset.length())));
+            data.append(BECH32_CHARSET.charAt(SECURE_RANDOM.nextInt(BECH32_CHARSET.length())));
         }
 
         // Calculate and append Bech32 checksum (6 characters)
