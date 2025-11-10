@@ -21,7 +21,7 @@
         <!-- Annotation Dependency Versions -->
         <lombok.version>1.18.36</lombok.version>
 
-        <fasterxml.jackson.version>2.18.1</fasterxml.jackson.version>
+        <fasterxml.jackson.version>2.20.0</fasterxml.jackson.version>
 
         <!-- Test Dependency Versions -->
         <junit.version>5.9.1</junit.version>
