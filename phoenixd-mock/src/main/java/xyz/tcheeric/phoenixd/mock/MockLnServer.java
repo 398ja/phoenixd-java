@@ -346,12 +346,8 @@ public class MockLnServer {
         System.out.println("phoenixd-mock: Auto-settling invoice payment_hash=" + paymentHash +
                 " amount=" + invoice.amountSat + " sat");
 
-        // Create payment record if externalId (invoiceId) is provided
-        if (invoice.externalId != null && !invoice.externalId.isEmpty()) {
-            createPaymentRecord(invoice.externalId, invoice.serialized, invoice.amountSat);
-            // Wait a bit for payment creation to complete before updating
-            try { Thread.sleep(100); } catch (InterruptedException e) { }
-        }
+        // Note: Payment record is already created by PhoenixdGateway.pay()
+        // so we don't need to create it here. We just update it to PAID via webhook.
 
         // Send webhook notification to gateway
         sendWebhookNotification(invoice);
@@ -439,53 +435,6 @@ public class MockLnServer {
 
         } catch (Exception e) {
             System.err.println("phoenixd-mock: Failed to update payment invoice_id=" + invoice.externalId +
-                    " error=" + e.getMessage());
-        }
-    }
-
-    /**
-     * Creates a payment record in the gateway database via REST API.
-     * This allows the mint to track the payment status for this quote.
-     */
-    private void createPaymentRecord(String invoiceId, String request, long amountSat) {
-        try {
-            // First, look up the actual quote ID using the invoice ID
-            String actualQuoteId = lookupQuoteIdByInvoiceId(invoiceId);
-            if (actualQuoteId == null) {
-                System.err.println("phoenixd-mock: Could not find quote for invoice_id=" + invoiceId);
-                return;
-            }
-
-            String paymentId = java.util.UUID.randomUUID().toString();
-            String payload = String.format(
-                    "{\"paymentId\":\"%s\",\"quoteId\":\"%s\",\"request\":\"%s\",\"amount\":%d,\"sourceCurrency\":\"sat\",\"state\":\"PENDING\"}",
-                    paymentId, actualQuoteId, request, amountSat
-            );
-
-            HttpRequest createRequest = HttpRequest.newBuilder()
-                    .uri(URI.create(webhookBaseUrl + "/payment"))
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(payload))
-                    .build();
-
-            httpClient.sendAsync(createRequest, HttpResponse.BodyHandlers.ofString())
-                    .thenAccept(response -> {
-                        if (response.statusCode() >= 200 && response.statusCode() < 300) {
-                            System.out.println("phoenixd-mock: Created payment record quote_id=" + actualQuoteId +
-                                    " invoice_id=" + invoiceId + " payment_id=" + paymentId);
-                        } else {
-                            System.err.println("phoenixd-mock: Failed to create payment record quote_id=" + actualQuoteId +
-                                    " invoice_id=" + invoiceId + " status=" + response.statusCode() + " body=" + response.body());
-                        }
-                    })
-                    .exceptionally(ex -> {
-                        System.err.println("phoenixd-mock: Exception creating payment record quote_id=" + actualQuoteId +
-                                " invoice_id=" + invoiceId + " error=" + ex.getMessage());
-                        return null;
-                    });
-
-        } catch (Exception e) {
-            System.err.println("phoenixd-mock: Failed to create payment record invoice_id=" + invoiceId +
                     " error=" + e.getMessage());
         }
     }
