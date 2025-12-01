@@ -69,6 +69,15 @@ public class MockLnServer {
     );
 
     /**
+     * Whether to automatically settle invoices (default: true for dev/test).
+     * Set to false to require external payment (production-like behavior).
+     * Configurable via PHOENIXD_AUTOPAY_ENABLED environment variable.
+     */
+    private final boolean autopayEnabled = Boolean.parseBoolean(
+            System.getenv().getOrDefault("PHOENIXD_AUTOPAY_ENABLED", "true")
+    );
+
+    /**
      * Webhook base URL (configurable via environment variable).
      */
     private final String webhookBaseUrl = System.getenv().getOrDefault(
@@ -110,8 +119,14 @@ public class MockLnServer {
         server.createContext("/payinvoice", this::handlePayInvoice);
         server.createContext("/delete", this::handleDelete);
         server.createContext("/patch", this::handlePatch);
+        server.createContext("/mockpay", this::handleMockPay);
         server.setExecutor(null);
         server.start();
+
+        System.out.println("phoenixd-mock: Started on port " + port +
+                " autopay_enabled=" + autopayEnabled +
+                " auto_settle_delay=" + autoSettleDelaySeconds + "s" +
+                " webhook_url=" + webhookBaseUrl);
     }
 
     public void stop() {
@@ -161,12 +176,17 @@ public class MockLnServer {
         InvoiceInfo invoiceInfo = new InvoiceInfo(paymentHash, bolt11, amountSat, externalId);
         invoices.put(paymentHash, invoiceInfo);
 
-        // Schedule auto-settlement after configured delay
-        // Payment record creation is done during auto-settlement to avoid race condition with quote creation
-        scheduler.schedule(() -> autoSettleInvoice(paymentHash), autoSettleDelaySeconds, TimeUnit.SECONDS);
-
-        System.out.println("phoenixd-mock: Created invoice payment_hash=" + paymentHash +
-                " bolt11=" + bolt11 + " external_id=" + externalId + " auto_settle_in=" + autoSettleDelaySeconds + "s");
+        // Schedule auto-settlement only if enabled
+        if (autopayEnabled) {
+            scheduler.schedule(() -> autoSettleInvoice(paymentHash), autoSettleDelaySeconds, TimeUnit.SECONDS);
+            System.out.println("phoenixd-mock: Created invoice payment_hash=" + paymentHash +
+                    " external_id=" + externalId + " amount=" + amountSat +
+                    " auto_settle_in=" + autoSettleDelaySeconds + "s");
+        } else {
+            System.out.println("phoenixd-mock: Created invoice payment_hash=" + paymentHash +
+                    " external_id=" + externalId + " amount=" + amountSat +
+                    " autopay=disabled (awaiting external payment or /mockpay)");
+        }
 
         writeJson(exchange, "{\"amountSat\":" + amountSat + ",\"paymentHash\":\"" + paymentHash +
                 "\",\"serialized\":\"" + bolt11 + "\"}");
@@ -333,6 +353,104 @@ public class MockLnServer {
     }
 
     /**
+     * Simulates an external Lightning payment for testing purposes.
+     *
+     * When autopay is disabled, invoices remain in PENDING state indefinitely.
+     * Since MockLnServer is not a real Lightning node, there's no way to actually
+     * pay the invoice. This endpoint allows clients/tests to simulate that payment
+     * was received, triggering the same flow as a real payment would:
+     *
+     * 1. Invoice marked as settled
+     * 2. Webhook sent to cashu-gateway
+     * 3. Payment state updated to PAID
+     *
+     * Parameters:
+     * - paymentHash (required): The payment hash from invoice creation
+     * - amountSat (optional): Override amount to simulate overpayment
+     *   - If omitted: pays exact quoted amount (normal case)
+     *   - If provided and > quoted: simulates overpayment (mint keeps excess)
+     *   - If provided and < quoted: simulates underpayment (for testing only,
+     *     wouldn't happen in production as BOLT11 payments are atomic)
+     *
+     * This enables testing of:
+     * - Client invoice handling
+     * - Payment polling flows
+     * - Webhook delivery
+     * - Post-payment minting
+     * - Overpayment scenarios (mint should still issue quoted amount only)
+     *
+     * @param exchange HTTP exchange containing paymentHash and optional amountSat
+     */
+    private void handleMockPay(HttpExchange exchange) throws IOException {
+        String query = exchange.getRequestURI().getQuery();
+        String paymentHash = null;
+        Long amountSatOverride = null;
+
+        if (query != null) {
+            for (String param : query.split("&")) {
+                String[] pair = param.split("=");
+                if (pair.length == 2) {
+                    if ("paymentHash".equals(pair[0])) {
+                        paymentHash = pair[1];
+                    } else if ("amountSat".equals(pair[0])) {
+                        try {
+                            amountSatOverride = Long.parseLong(pair[1]);
+                        } catch (NumberFormatException e) {
+                            writeJsonWithStatus(exchange, 400, "{\"error\":\"Invalid amountSat value\"}");
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (paymentHash == null) {
+            writeJsonWithStatus(exchange, 400, "{\"error\":\"paymentHash parameter required\"}");
+            return;
+        }
+
+        InvoiceInfo invoice = invoices.get(paymentHash);
+        if (invoice == null) {
+            writeJsonWithStatus(exchange, 404, "{\"error\":\"Invoice not found\",\"paymentHash\":\"" + paymentHash + "\"}");
+            return;
+        }
+
+        if (invoice.settled) {
+            writeJson(exchange, "{\"status\":\"already_paid\",\"paymentHash\":\"" + paymentHash + "\"}");
+            return;
+        }
+
+        // Determine payment amount
+        long paidAmount = (amountSatOverride != null) ? amountSatOverride : invoice.amountSat;
+        long quotedAmount = invoice.amountSat;
+
+        // Log payment details
+        String paymentType = "exact";
+        if (amountSatOverride != null) {
+            if (paidAmount > quotedAmount) {
+                paymentType = "overpayment";
+            } else if (paidAmount < quotedAmount) {
+                paymentType = "underpayment (test only - wouldn't happen in production)";
+            }
+        }
+
+        // Simulate payment received - marks as paid and sends webhook
+        // Note: The webhook updates state to PAID but doesn't change the amount
+        // The gateway/mint will issue tokens for the QUOTED amount, not paid amount
+        autoSettleInvoice(paymentHash);
+
+        System.out.println("phoenixd-mock: Mock payment received payment_hash=" + paymentHash +
+                " quoted=" + quotedAmount + " paid=" + paidAmount + " type=" + paymentType);
+
+        // Response includes both quoted and paid amounts for verification
+        writeJson(exchange, "{\"status\":\"paid\"" +
+                ",\"paymentHash\":\"" + paymentHash + "\"" +
+                ",\"quotedAmountSat\":" + quotedAmount +
+                ",\"paidAmountSat\":" + paidAmount +
+                ",\"paymentType\":\"" + paymentType.split(" ")[0] + "\"}");
+    }
+
+    /**
      * Auto-settles an invoice by marking it as paid and sending a webhook notification.
      * This simulates a Lightning Network payment being received for testing purposes.
      */
@@ -472,8 +590,16 @@ public class MockLnServer {
     }
 
     private void writeJson(HttpExchange exchange, String json) throws IOException {
+        writeJsonWithStatus(exchange, 200, json);
+    }
+
+    private void writeJsonWithStatus(HttpExchange exchange, int statusCode, String json) throws IOException {
         exchange.getResponseHeaders().add("Content-Type", "application/json");
-        writeString(exchange, json);
+        byte[] bytes = json.getBytes(StandardCharsets.UTF_8);
+        exchange.sendResponseHeaders(statusCode, bytes.length);
+        try (OutputStream os = exchange.getResponseBody()) {
+            os.write(bytes);
+        }
     }
 
     private void writeString(HttpExchange exchange, String body) throws IOException {
