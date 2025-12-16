@@ -74,6 +74,28 @@
 
     <build>
         <plugins>
+            <!-- Create executable JAR with all dependencies -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>xyz.tcheeric.phoenixd.mock.Main</mainClass>
+                                </transformer>
+                            </transformers>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <!-- Exclude Main class from JaCoCo coverage (bootstrapper code) -->
             <plugin>
                 <groupId>org.jacoco</groupId>
@@ -102,7 +124,9 @@
                     <containerizingMode>packaged</containerizingMode>
                     <container>
                         <entrypoint>
-				            <shell>java -jar /app/app.jar</shell>
+                            <arg>java</arg>
+                            <arg>-jar</arg>
+                            <arg>/app/classpath/${project.artifactId}-${project.version}.jar</arg>
                         </entrypoint>
                     </container>
                 </configuration>

@@ -45,6 +45,11 @@ public class MockLnServer {
     private final Map<String, InvoiceInfo> invoices = new ConcurrentHashMap<>();
 
     /**
+     * Index of invoices by external ID (quote ID) for lookup.
+     */
+    private final Map<String, InvoiceInfo> invoicesByExternalId = new ConcurrentHashMap<>();
+
+    /**
      * Scheduler for auto-settling invoices after a delay.
      */
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
@@ -175,6 +180,11 @@ public class MockLnServer {
         // Track the invoice for auto-settlement
         InvoiceInfo invoiceInfo = new InvoiceInfo(paymentHash, bolt11, amountSat, externalId);
         invoices.put(paymentHash, invoiceInfo);
+
+        // Also index by external ID (quote ID) for mockpay lookup
+        if (externalId != null && !externalId.isEmpty()) {
+            invoicesByExternalId.put(externalId, invoiceInfo);
+        }
 
         // Schedule auto-settlement only if enabled
         if (autopayEnabled) {
@@ -384,6 +394,7 @@ public class MockLnServer {
     private void handleMockPay(HttpExchange exchange) throws IOException {
         String query = exchange.getRequestURI().getQuery();
         String paymentHash = null;
+        String externalId = null;
         Long amountSatOverride = null;
 
         if (query != null) {
@@ -392,6 +403,8 @@ public class MockLnServer {
                 if (pair.length == 2) {
                     if ("paymentHash".equals(pair[0])) {
                         paymentHash = pair[1];
+                    } else if ("externalId".equals(pair[0])) {
+                        externalId = pair[1];
                     } else if ("amountSat".equals(pair[0])) {
                         try {
                             amountSatOverride = Long.parseLong(pair[1]);
@@ -404,14 +417,26 @@ public class MockLnServer {
             }
         }
 
-        if (paymentHash == null) {
-            writeJsonWithStatus(exchange, 400, "{\"error\":\"paymentHash parameter required\"}");
+        // Require either paymentHash or externalId
+        if (paymentHash == null && externalId == null) {
+            writeJsonWithStatus(exchange, 400, "{\"error\":\"paymentHash or externalId parameter required\"}");
             return;
         }
 
-        InvoiceInfo invoice = invoices.get(paymentHash);
+        // Lookup invoice by paymentHash first, then by externalId
+        InvoiceInfo invoice = null;
+        if (paymentHash != null) {
+            invoice = invoices.get(paymentHash);
+        }
+        if (invoice == null && externalId != null) {
+            invoice = invoicesByExternalId.get(externalId);
+            if (invoice != null) {
+                paymentHash = invoice.paymentHash; // Use the actual payment hash for response
+            }
+        }
         if (invoice == null) {
-            writeJsonWithStatus(exchange, 404, "{\"error\":\"Invoice not found\",\"paymentHash\":\"" + paymentHash + "\"}");
+            String lookupKey = paymentHash != null ? paymentHash : externalId;
+            writeJsonWithStatus(exchange, 404, "{\"error\":\"Invoice not found\",\"lookupKey\":\"" + lookupKey + "\"}");
             return;
         }
 
@@ -472,8 +497,9 @@ public class MockLnServer {
     }
 
     /**
-     * Updates the gateway payment record to mark the invoice as paid.
-     * Uses Spring Data REST PATCH endpoint to update payment state.
+     * Updates the gateway quote state to PAID when an invoice is settled.
+     * For RECEIVE quotes (minting), there's no payment record - only the quote needs updating.
+     * Uses Spring Data REST PATCH endpoint to update quote state.
      */
     private void sendWebhookNotification(InvoiceInfo invoice) {
         try {
@@ -482,39 +508,35 @@ public class MockLnServer {
                 return;
             }
 
-            // Look up the actual quote ID using the invoice ID (externalId)
-            String actualQuoteId = lookupQuoteIdByInvoiceId(invoice.externalId);
-            if (actualQuoteId == null) {
-                System.err.println("phoenixd-mock: Could not find quote for invoice_id=" + invoice.externalId);
-                return;
-            }
+            // Look up the quote using the invoice ID (externalId)
+            String quoteSearchUrl = webhookBaseUrl + "/quote/search/findByInvoiceId?invoiceId=" +
+                    java.net.URLEncoder.encode(invoice.externalId, StandardCharsets.UTF_8);
 
-            // Find the payment by quoteId
-            String paymentSearchUrl = webhookBaseUrl + "/payment/search/findByQuoteId?quoteId=" +
-                    java.net.URLEncoder.encode(actualQuoteId, StandardCharsets.UTF_8);
-
-            HttpResponse<String> paymentResponse = httpClient.send(
-                    HttpRequest.newBuilder().uri(URI.create(paymentSearchUrl)).GET().build(),
+            HttpResponse<String> quoteResponse = httpClient.send(
+                    HttpRequest.newBuilder().uri(URI.create(quoteSearchUrl)).GET().build(),
                     HttpResponse.BodyHandlers.ofString()
             );
 
-            if (paymentResponse.statusCode() < 200 || paymentResponse.statusCode() >= 300) {
-                System.err.println("phoenixd-mock: Payment not found quote_id=" + actualQuoteId +
-                        " invoice_id=" + invoice.externalId);
+            if (quoteResponse.statusCode() < 200 || quoteResponse.statusCode() >= 300) {
+                System.err.println("phoenixd-mock: Quote not found invoice_id=" + invoice.externalId);
                 return;
             }
 
-            // Extract payment self link using Jackson JSON parsing
-            String paymentBody = paymentResponse.body();
-            JsonNode paymentJson = objectMapper.readTree(paymentBody);
-            JsonNode linksNode = paymentJson.get("_links");
+            // Extract quote self link and quoteId using Jackson JSON parsing
+            String quoteBody = quoteResponse.body();
+            JsonNode quoteJson = objectMapper.readTree(quoteBody);
+
+            JsonNode quoteIdNode = quoteJson.get("quoteId");
+            String quoteId = quoteIdNode != null ? quoteIdNode.asText() : "unknown";
+
+            JsonNode linksNode = quoteJson.get("_links");
             if (linksNode == null) {
-                System.err.println("phoenixd-mock: _links field not found in payment response");
+                System.err.println("phoenixd-mock: _links field not found in quote response");
                 return;
             }
             JsonNode selfNode = linksNode.get("self");
             if (selfNode == null) {
-                System.err.println("phoenixd-mock: self link not found in payment response");
+                System.err.println("phoenixd-mock: self link not found in quote response");
                 return;
             }
             JsonNode hrefNode = selfNode.get("href");
@@ -522,70 +544,38 @@ public class MockLnServer {
                 System.err.println("phoenixd-mock: href field not found in self link");
                 return;
             }
-            String paymentUrl = hrefNode.asText();
+            String quoteUrl = hrefNode.asText();
 
-            // PATCH the payment to update state to PAID
-            String payload = String.format("{\"state\":\"PAID\",\"paidDate\":\"%s\"}", java.time.Instant.now());
+            // PATCH the quote to update state to PAID
+            String payload = "{\"state\":\"PAID\"}";
 
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(paymentUrl))
+                    .uri(URI.create(quoteUrl))
                     .header("Content-Type", "application/json")
                     .method("PATCH", HttpRequest.BodyPublishers.ofString(payload))
                     .build();
 
-            String finalQuoteId = actualQuoteId;  // For lambda capture
+            String finalQuoteId = quoteId;  // For lambda capture
             httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                     .thenAccept(response -> {
                         if (response.statusCode() >= 200 && response.statusCode() < 300) {
-                            System.out.println("phoenixd-mock: Payment updated to PAID quote_id=" + finalQuoteId +
+                            System.out.println("phoenixd-mock: Quote updated to PAID quote_id=" + finalQuoteId +
                                     " invoice_id=" + invoice.externalId + " status=" + response.statusCode());
                         } else {
-                            System.err.println("phoenixd-mock: Payment update failed quote_id=" + finalQuoteId +
+                            System.err.println("phoenixd-mock: Quote update failed quote_id=" + finalQuoteId +
                                     " invoice_id=" + invoice.externalId + " status=" + response.statusCode() +
                                     " body=" + response.body());
                         }
                     })
                     .exceptionally(ex -> {
-                        System.err.println("phoenixd-mock: Payment update exception quote_id=" + finalQuoteId +
+                        System.err.println("phoenixd-mock: Quote update exception quote_id=" + finalQuoteId +
                                 " invoice_id=" + invoice.externalId + " error=" + ex.getMessage());
                         return null;
                     });
 
         } catch (Exception e) {
-            System.err.println("phoenixd-mock: Failed to update payment invoice_id=" + invoice.externalId +
+            System.err.println("phoenixd-mock: Failed to update quote invoice_id=" + invoice.externalId +
                     " error=" + e.getMessage());
-        }
-    }
-
-    /**
-     * Looks up the actual quote ID from the gateway database using the invoice ID.
-     * The gateway creates quotes with a quoteId and invoiceId (externalId).
-     * phoenixd-mock receives the invoiceId as externalId, so we need to find the corresponding quoteId.
-     */
-    private String lookupQuoteIdByInvoiceId(String invoiceId) {
-        try {
-            String url = webhookBaseUrl + "/quote/search/findByInvoiceId?invoiceId=" +
-                    java.net.URLEncoder.encode(invoiceId, StandardCharsets.UTF_8);
-
-            HttpResponse<String> response = httpClient.send(
-                    HttpRequest.newBuilder().uri(URI.create(url)).GET().build(),
-                    HttpResponse.BodyHandlers.ofString()
-            );
-
-            if (response.statusCode() >= 200 && response.statusCode() < 300) {
-                JsonNode quoteJson = objectMapper.readTree(response.body());
-                JsonNode quoteIdNode = quoteJson.get("quoteId");
-                if (quoteIdNode != null) {
-                    return quoteIdNode.asText();
-                }
-            }
-
-            System.err.println("phoenixd-mock: Quote not found for invoice_id=" + invoiceId);
-            return null;
-        } catch (Exception e) {
-            System.err.println("phoenixd-mock: Failed to lookup quote invoice_id=" + invoiceId +
-                    " error=" + e.getMessage());
-            return null;
         }
     }
 
