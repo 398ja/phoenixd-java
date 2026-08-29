@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -494,12 +495,54 @@ public class MockLnServer {
 
         // Send webhook notification to gateway
         sendWebhookNotification(invoice);
+
+        // And notify the way real phoenixd does. The quote PATCH above is a shortcut this
+        // mock takes; it marks the quote PAID without ever exercising the webhook path that
+        // carries the news onward to the mint. Staging 2026-08-29: the quote was PAID, the
+        // mint had no funding row, and issuance failed with funding_required. A mock that
+        // skips the real path cannot catch that, so it posts the real callback too.
+        postPaymentWebhook(invoice);
+    }
+
+    /**
+     * Posts the payment callback in phoenixd's own shape: a form-encoded POST to
+     * {@code /webhook/phoenixd} carrying type, amountSat, paymentHash and externalId.
+     *
+     * <p>Best-effort. A mock that refuses to settle because a downstream listener is absent
+     * would be worse than one that settles and logs.
+     */
+    private void postPaymentWebhook(InvoiceInfo invoice) {
+        try {
+            String form = "type=payment_received"
+                    + "&amountSat=" + invoice.amountSat
+                    + "&paymentHash=" + URLEncoder.encode(invoice.paymentHash, StandardCharsets.UTF_8)
+                    + "&externalId=" + URLEncoder.encode(invoice.externalId, StandardCharsets.UTF_8);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(webhookBaseUrl + "/webhook/phoenixd"))
+                    .header("Content-Type", "application/x-www-form-urlencoded")
+                    .POST(HttpRequest.BodyPublishers.ofString(form))
+                    .build();
+
+            httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                    .thenAccept(response -> System.out.println(
+                            "phoenixd-mock: Webhook posted external_id=" + invoice.externalId
+                                    + " status=" + response.statusCode()))
+                    .exceptionally(ex -> {
+                        System.err.println("phoenixd-mock: Webhook post failed external_id="
+                                + invoice.externalId + " error=" + ex.getMessage());
+                        return null;
+                    });
+        } catch (Exception e) {
+            System.err.println("phoenixd-mock: Webhook post exception external_id="
+                    + invoice.externalId + " error=" + e.getMessage());
+        }
     }
 
     /**
      * Updates the gateway quote state to PAID when an invoice is settled.
      * For RECEIVE quotes (minting), there's no payment record - only the quote needs updating.
-     * Uses Spring Data REST PATCH endpoint to update quote state.
+     * Uses PUT /quote/{id} endpoint to update quote state.
      */
     private void sendWebhookNotification(InvoiceInfo invoice) {
         try {
@@ -522,31 +565,23 @@ public class MockLnServer {
                 return;
             }
 
-            // Extract quote self link and quoteId using Jackson JSON parsing
+            // Extract quote id and quoteId using Jackson JSON parsing
             String quoteBody = quoteResponse.body();
             JsonNode quoteJson = objectMapper.readTree(quoteBody);
 
             JsonNode quoteIdNode = quoteJson.get("quoteId");
             String quoteId = quoteIdNode != null ? quoteIdNode.asText() : "unknown";
 
-            JsonNode linksNode = quoteJson.get("_links");
-            if (linksNode == null) {
-                System.err.println("phoenixd-mock: _links field not found in quote response");
+            // Extract database id for PUT request
+            JsonNode idNode = quoteJson.get("id");
+            if (idNode == null || idNode.isNull()) {
+                System.err.println("phoenixd-mock: No id field found in quote response for quote_id=" + quoteId);
                 return;
             }
-            JsonNode selfNode = linksNode.get("self");
-            if (selfNode == null) {
-                System.err.println("phoenixd-mock: self link not found in quote response");
-                return;
-            }
-            JsonNode hrefNode = selfNode.get("href");
-            if (hrefNode == null) {
-                System.err.println("phoenixd-mock: href field not found in self link");
-                return;
-            }
-            String quoteUrl = hrefNode.asText();
+            long databaseId = idNode.asLong();
+            String quoteUrl = webhookBaseUrl + "/quote/" + databaseId;
 
-            // PATCH the quote to update state to PAID
+            // PATCH the quote to update state to PAID (PATCH preserves other fields, PUT clears them)
             String payload = "{\"state\":\"PAID\"}";
 
             HttpRequest request = HttpRequest.newBuilder()
