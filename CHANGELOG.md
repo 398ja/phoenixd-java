@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0 — 2026-08-29
+
+### Fixed
+- **phoenixd-mock posts the payment webhook, not only the quote PATCH.** Settling an
+  invoice marked the gateway quote PAID without exercising the webhook that carries the
+  news to the mint, so a mint could sit on an unfunded quote while the quote read PAID.
+  The mock now also POSTs the real form-encoded callback to `/webhook/phoenixd`, so a
+  staging stack exercises the same path production does.
+
 ## 0.1.1 — 2025-09-13
 
 ### Highlights
