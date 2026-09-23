@@ -118,7 +118,10 @@ class MockLnServerAutopayTest {
         assertThat(response.statusCode()).isEqualTo(404);
         JsonNode json = objectMapper.readTree(response.body());
         assertThat(json.get("error").asText()).isEqualTo("Invoice not found");
-        assertThat(json.get("paymentHash").asText()).isEqualTo("unknown_hash_123");
+        // `lookupKey`, not `paymentHash`: the endpoint accepts EITHER a payment hash or an
+        // externalId, so the echoed field names whichever was supplied. The test asserted the
+        // pre-externalId shape and had been failing since that lookup was added.
+        assertThat(json.get("lookupKey").asText()).isEqualTo("unknown_hash_123");
     }
 
     /**
@@ -180,7 +183,9 @@ class MockLnServerAutopayTest {
         // Assert: Returns 400 with error message
         assertThat(response.statusCode()).isEqualTo(400);
         JsonNode json = objectMapper.readTree(response.body());
-        assertThat(json.get("error").asText()).isEqualTo("paymentHash parameter required");
+        // Same drift as the 404 above: the endpoint now takes either identifier, and says so.
+        assertThat(json.get("error").asText())
+                .isEqualTo("paymentHash or externalId parameter required");
     }
 
     /**
