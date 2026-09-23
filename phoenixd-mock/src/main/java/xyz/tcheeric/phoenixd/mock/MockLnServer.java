@@ -591,22 +591,72 @@ public class MockLnServer {
                     .build();
 
             String finalQuoteId = quoteId;  // For lambda capture
-            httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                    .thenAccept(response -> {
-                        if (response.statusCode() >= 200 && response.statusCode() < 300) {
-                            System.out.println("phoenixd-mock: Quote updated to PAID quote_id=" + finalQuoteId +
-                                    " invoice_id=" + invoice.externalId + " status=" + response.statusCode());
-                        } else {
-                            System.err.println("phoenixd-mock: Quote update failed quote_id=" + finalQuoteId +
-                                    " invoice_id=" + invoice.externalId + " status=" + response.statusCode() +
-                                    " body=" + response.body());
-                        }
-                    })
-                    .exceptionally(ex -> {
-                        System.err.println("phoenixd-mock: Quote update exception quote_id=" + finalQuoteId +
-                                " invoice_id=" + invoice.externalId + " error=" + ex.getMessage());
-                        return null;
-                    });
+            // SYNCHRONOUS, and the result is READ BACK. Both matter, and both
+            // come from a real staging failure on 2026-09-23 (payment-adapter#245).
+            //
+            // Three sales failed with the mint reporting "Invoice not paid"
+            // while its own voucher_quote said FUNDED. This log line said
+            // "Quote updated to PAID ... status=200" for every one of them, and
+            // the row was still PENDING. A 200 from a Spring Data REST PATCH
+            // does not mean the field changed: an unwritable field, or a lost
+            // update under the entity's optimistic-locking `version` column,
+            // both answer 200 having changed nothing.
+            //
+            // So the status code is no longer the thing being reported. The
+            // quote is re-read and the STATE is checked, because that is the
+            // claim this line makes and it was false for three real sales.
+            //
+            // Blocking rather than async because the caller posts the payment
+            // webhook immediately afterwards, and the adapter was observed
+            // handling that webhook for the same quote in the same millisecond
+            // the PATCH landed (16:32:37.548 vs .551). Two concurrent writers
+            // to one row is the leading explanation for the lost update; doing
+            // this first and waiting removes the race rather than narrowing it.
+            try {
+                HttpResponse<String> patchResponse =
+                        httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+                if (patchResponse.statusCode() < 200 || patchResponse.statusCode() >= 300) {
+                    System.err.println("phoenixd-mock: Quote update failed quote_id=" + finalQuoteId
+                            + " invoice_id=" + invoice.externalId
+                            + " status=" + patchResponse.statusCode()
+                            + " body=" + patchResponse.body());
+                    return;
+                }
+
+                // The read-back. Deliberately a fresh GET rather than trusting the
+                // PATCH response body: the response is what the server said it
+                // wrote, and the failure being guarded against is precisely a
+                // write that reports success and does not land.
+                HttpResponse<String> verify = httpClient.send(
+                        HttpRequest.newBuilder().uri(URI.create(quoteUrl)).GET().build(),
+                        HttpResponse.BodyHandlers.ofString());
+
+                String observedState = "unreadable";
+                if (verify.statusCode() >= 200 && verify.statusCode() < 300) {
+                    JsonNode stateNode = objectMapper.readTree(verify.body()).get("state");
+                    if (stateNode != null && !stateNode.isNull()) {
+                        observedState = stateNode.asText();
+                    }
+                }
+
+                if ("PAID".equals(observedState)) {
+                    System.out.println("phoenixd-mock: Quote updated to PAID quote_id=" + finalQuoteId
+                            + " invoice_id=" + invoice.externalId
+                            + " status=" + patchResponse.statusCode() + " verified=true");
+                } else {
+                    // The case that cost three sales and reported success.
+                    System.err.println("phoenixd-mock: QUOTE UPDATE LOST quote_id=" + finalQuoteId
+                            + " invoice_id=" + invoice.externalId
+                            + " patch_status=" + patchResponse.statusCode()
+                            + " state_after=" + observedState
+                            + " — the PATCH was accepted and the state did not change."
+                            + " The mint will report 'Invoice not paid' for this quote.");
+                }
+            } catch (Exception ex) {
+                System.err.println("phoenixd-mock: Quote update exception quote_id=" + finalQuoteId +
+                        " invoice_id=" + invoice.externalId + " error=" + ex.getMessage());
+            }
 
         } catch (Exception e) {
             System.err.println("phoenixd-mock: Failed to update quote invoice_id=" + invoice.externalId +
