@@ -556,7 +556,9 @@ public class MockLnServer {
                     java.net.URLEncoder.encode(invoice.externalId, StandardCharsets.UTF_8);
 
             HttpResponse<String> quoteResponse = httpClient.send(
-                    HttpRequest.newBuilder().uri(URI.create(quoteSearchUrl)).GET().build(),
+                    HttpRequest.newBuilder().uri(URI.create(quoteSearchUrl))
+                            .timeout(java.time.Duration.ofSeconds(10))
+                            .GET().build(),
                     HttpResponse.BodyHandlers.ofString()
             );
 
@@ -584,9 +586,17 @@ public class MockLnServer {
             // PATCH the quote to update state to PAID (PATCH preserves other fields, PUT clears them)
             String payload = "{\"state\":\"PAID\"}";
 
+            // Per-request timeout, NOT just the client's connectTimeout.
+            //
+            // These calls became BLOCKING so the quote update completes before the payment
+            // webhook races it, and they run on a 2-thread scheduler. connectTimeout does not
+            // bound a server that accepts the connection and then never answers, so without
+            // this two stuck requests would wedge auto-settlement for every invoice — the mock
+            // would stop settling and look like the gateway had broken.
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(quoteUrl))
                     .header("Content-Type", "application/json")
+                    .timeout(java.time.Duration.ofSeconds(10))
                     .method("PATCH", HttpRequest.BodyPublishers.ofString(payload))
                     .build();
 
@@ -629,7 +639,9 @@ public class MockLnServer {
                 // wrote, and the failure being guarded against is precisely a
                 // write that reports success and does not land.
                 HttpResponse<String> verify = httpClient.send(
-                        HttpRequest.newBuilder().uri(URI.create(quoteUrl)).GET().build(),
+                        HttpRequest.newBuilder().uri(URI.create(quoteUrl))
+                                .timeout(java.time.Duration.ofSeconds(10))
+                                .GET().build(),
                         HttpResponse.BodyHandlers.ofString());
 
                 String observedState = "unreadable";
