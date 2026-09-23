@@ -1,5 +1,40 @@
 # Changelog
 
+## 0.3.1 — 2026-09-23
+
+### Fixed
+- **The quote PATCH is verified rather than assumed, and no longer races the payment webhook.**
+  Settling an invoice logged `Quote updated to PAID ... status=200` whenever the PATCH returned
+  2xx, without ever re-reading the row. On 2026-09-23 it logged exactly that for three staging
+  sales whose quotes were still `PENDING`, and the mint refused to issue against all three
+  (398ja/payment-adapter#245).
+
+  A 200 from a Spring Data REST PATCH does not mean the field changed: an unwritable field
+  answers 200, and so does a lost update under the entity's optimistic-locking `version` column.
+  The state is now read back with a fresh GET and checked; a write that is accepted without
+  landing logs `QUOTE UPDATE LOST` and says what the consequence will be.
+
+  The call is also synchronous now. The caller posts the payment webhook immediately afterwards,
+  and payment-adapter was observed handling that webhook for the same quote in the same
+  millisecond the PATCH landed. Completing this write first removes the overlap rather than
+  narrowing it.
+
+  The underlying clobber was in payment-adapter and is fixed there in 0.16.2. This change does
+  not fix it — it makes a recurrence name itself in seconds instead of costing an afternoon of
+  log archaeology.
+
+- **The settle path's HTTP calls are bounded by a per-request timeout.** Those calls are now
+  blocking and run on a two-thread scheduler. `connectTimeout` does not bound a server that
+  accepts a connection and never answers, so two stuck requests would have wedged auto-settlement
+  for every invoice — the mock would quietly stop settling and look like the gateway had failed.
+
+### Fixed (tests)
+- **Two assertions had drifted from the endpoint they describe**, leaving this module's suite red
+  since mockpay learned to accept an `externalId`: the 404 body echoes `lookupKey` rather than
+  `paymentHash`, and the 400 message names both parameters. A suite that is always red trains
+  everyone to skip it, and it hid that other changes were landing unverified. 31 tests green,
+  which is the first time for this module.
+
 ## 0.3.0 — 2026-08-29
 
 ### Fixed
