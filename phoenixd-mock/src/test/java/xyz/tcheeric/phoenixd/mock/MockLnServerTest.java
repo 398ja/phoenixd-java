@@ -97,6 +97,31 @@ class MockLnServerTest {
         assertThat(bolt11).startsWith("lnbc");
     }
 
+    // The invoice charges what was asked for: 500 sat is 5000 nano-BTC in the BOLT11 prefix, so
+    // a consumer reading the price off the invoice sees 500, not the 1 sat the prefix used to say.
+    @Test
+    void createdInvoiceCarriesTheRequestedAmountInItsPrefix() throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + "/createinvoice"))
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .POST(HttpRequest.BodyPublishers.ofString("amountSat=500"))
+                .build();
+
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        String bolt11 = objectMapper.readTree(response.body()).get("serialized").asText();
+        assertThat(bolt11).startsWith("lnbc5000n1");
+    }
+
+    // One sat is ten nano-BTC, and a non-positive amount is written as no amount at all.
+    @Test
+    void bolt11AmountEncodesWholeSatsWithTheNanoMultiplier() {
+        assertThat(MockLnServer.bolt11Amount(1)).isEqualTo("10n");
+        assertThat(MockLnServer.bolt11Amount(100)).isEqualTo("1000n");
+        assertThat(MockLnServer.bolt11Amount(0)).isEmpty();
+        assertThat(MockLnServer.bolt11Amount(-3)).isEmpty();
+    }
+
     @Test
     void shouldGetInvoiceStatus() throws Exception {
         // Arrange: Create an invoice first

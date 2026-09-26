@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.2 — 2026-09-26
+
+### Fixed
+- **A mock invoice's prefix now carries the amount it charges.** Every invoice began `lnbc10n`
+  (1 sat) whatever `amountSat` was requested, so a consumer reading the price off the invoice saw
+  1 sat. imani-gateway-core checks that a client mint's invoice charges what the sale costs
+  (imani-gateway-core#92), and refused every staging client mint because of it. The prefix is now
+  `lnbc{amountSat × 10}n`, the nano-BTC form of the requested amount, and an amount of zero or
+  less is written as an amountless invoice. The invoice is still not signed or payable.
+
 ## 0.3.1 — 2026-09-23
 
 ### Fixed
