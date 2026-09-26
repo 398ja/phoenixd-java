@@ -21,10 +21,10 @@
         <maven.compiler.target>21</maven.compiler.target>
 
         <!-- Annotation Dependency Versions -->
-        <lombok.version>1.18.36</lombok.version>
+        <lombok.version>1.18.42</lombok.version>
         <slf4j.version>2.0.13</slf4j.version>
 
-        <fasterxml.jackson.version>2.18.3</fasterxml.jackson.version>
+        <fasterxml.jackson.version>2.20.0</fasterxml.jackson.version>
 
         <!-- Apache Commons Versions -->
         <commons.configuration2.version>2.11.0</commons.configuration2.version>
