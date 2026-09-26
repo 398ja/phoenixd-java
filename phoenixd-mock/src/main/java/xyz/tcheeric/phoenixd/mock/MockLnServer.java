@@ -176,7 +176,7 @@ public class MockLnServer {
         // Generate a unique mock bolt11 invoice with valid Bech32 encoding
         String invoiceId = Long.toHexString(System.nanoTime());
         String paymentHash = "hash" + invoiceId;
-        String bolt11 = generateValidBolt11Invoice();
+        String bolt11 = generateValidBolt11Invoice(amountSat);
 
         // Track the invoice for auto-settlement
         InvoiceInfo invoiceInfo = new InvoiceInfo(paymentHash, bolt11, amountSat, externalId);
@@ -241,10 +241,14 @@ public class MockLnServer {
      *
      * This generates a mock invoice that passes basic Bech32 validation but is not
      * cryptographically valid for actual Lightning Network payments.
+     *
+     * <p>The human-readable part carries the requested amount, as a real invoice does. It used
+     * to be a fixed {@code lnbc10n} (1 sat) whatever was asked for, so anything that reads the
+     * price off the invoice, such as imani-gateway-core's check that a client mint charged what
+     * the sale costs, refused every invoice this mock issued.
      */
-    private String generateValidBolt11Invoice() {
-        // Human-readable part: ln + bc (bitcoin mainnet) + 10n (10 nanosats = ~0 sats for testing)
-        String hrp = "lnbc10n";
+    String generateValidBolt11Invoice(long amountSat) {
+        String hrp = "lnbc" + bolt11Amount(amountSat);
 
         // Generate random payment hash (32 bytes = 52 chars in bech32, roughly)
         // For a minimal valid invoice, we need at least timestamp + payment hash
@@ -260,6 +264,14 @@ public class MockLnServer {
         String checksum = calculateBech32Checksum(hrp, data.toString());
 
         return hrp + "1" + data + checksum;
+    }
+
+    /**
+     * The BOLT11 amount for a whole number of sats. With the {@code n} (nano-BTC) multiplier one
+     * sat is 10 units. Zero or less is an amountless invoice, which BOLT11 writes as no amount.
+     */
+    static String bolt11Amount(long amountSat) {
+        return amountSat > 0 ? (amountSat * 10) + "n" : "";
     }
 
     /**
