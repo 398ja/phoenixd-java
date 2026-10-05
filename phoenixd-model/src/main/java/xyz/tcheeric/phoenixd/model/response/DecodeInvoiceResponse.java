@@ -1,14 +1,23 @@
 package xyz.tcheeric.phoenixd.model.response;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import xyz.tcheeric.phoenixd.common.rest.Response;
 
 import java.util.List;
 
+/**
+ * phoenixd's answer to {@code /decodeinvoice}.
+ *
+ * <p>{@code paymentHash} is read from the response: callers such as payment-adapter look the
+ * payment up by it. Fields this class does not model are ignored, so a newer phoenixd that
+ * adds fields does not break decoding.
+ */
 @Data
 @NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class DecodeInvoiceResponse implements Response {
 
     private Integer amount;
@@ -17,7 +26,6 @@ public class DecodeInvoiceResponse implements Response {
     @JsonIgnore
     private String chain;
 
-    @JsonIgnore
     private String paymentHash;
 
     @JsonIgnore

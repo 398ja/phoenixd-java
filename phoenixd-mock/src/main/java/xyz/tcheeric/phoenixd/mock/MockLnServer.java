@@ -15,7 +15,10 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.HexFormat;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -39,6 +42,9 @@ public class MockLnServer {
      * Secure random instance for generating random invoice data.
      */
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
+    /** Length of a BOLT11 signature (65 bytes) in bech32 characters. */
+    private static final int SIGNATURE_CHARS = 104;
 
     /**
      * Tracks created invoices by payment hash for auto-settlement.
@@ -123,6 +129,7 @@ public class MockLnServer {
         server.createContext("/getinvoice", this::handleGetInvoice);
         server.createContext("/decodeinvoice", this::handleDecodeInvoice);
         server.createContext("/payinvoice", this::handlePayInvoice);
+        server.createContext("/payments/incoming/", this::handleGetIncomingPayment);
         server.createContext("/delete", this::handleDelete);
         server.createContext("/patch", this::handlePatch);
         server.createContext("/mockpay", this::handleMockPay);
@@ -174,9 +181,12 @@ public class MockLnServer {
         }
 
         // Generate a unique mock bolt11 invoice with valid Bech32 encoding
-        String invoiceId = Long.toHexString(System.nanoTime());
-        String paymentHash = "hash" + invoiceId;
-        String bolt11 = generateValidBolt11Invoice(amountSat);
+        // A real 32-byte payment hash, written into the invoice's p field, so /decodeinvoice
+        // can read it back the way phoenixd does.
+        byte[] hashBytes = new byte[32];
+        SECURE_RANDOM.nextBytes(hashBytes);
+        String paymentHash = HexFormat.of().formatHex(hashBytes);
+        String bolt11 = generateValidBolt11Invoice(amountSat, hashBytes);
 
         // Track the invoice for auto-settlement
         InvoiceInfo invoiceInfo = new InvoiceInfo(paymentHash, bolt11, amountSat, externalId);
@@ -248,15 +258,28 @@ public class MockLnServer {
      * the sale costs, refused every invoice this mock issued.
      */
     String generateValidBolt11Invoice(long amountSat) {
+        byte[] hashBytes = new byte[32];
+        SECURE_RANDOM.nextBytes(hashBytes);
+        return generateValidBolt11Invoice(amountSat, hashBytes);
+    }
+
+    /**
+     * Same as {@link #generateValidBolt11Invoice(long)}, but lays the data out as BOLT11 does:
+     * a 7-character timestamp, a {@code p} tagged field holding {@code paymentHash}, then a
+     * random 104-character stand-in for the signature. {@link #paymentHashFromBolt11} reads the
+     * hash back out.
+     */
+    String generateValidBolt11Invoice(long amountSat, byte[] paymentHash) {
         String hrp = "lnbc" + bolt11Amount(amountSat);
-
-        // Generate random payment hash (32 bytes = 52 chars in bech32, roughly)
-        // For a minimal valid invoice, we need at least timestamp + payment hash
-        // Bech32 charset: qpzry9x8gf2tvdw0s3jn54khce6mua7l
         StringBuilder data = new StringBuilder();
-
-        // Generate 52 random bech32 characters (represents ~32 bytes of data)
-        for (int i = 0; i < 52; i++) {
+        long timestamp = System.currentTimeMillis() / 1000;
+        for (int i = 6; i >= 0; i--) {
+            data.append(BECH32_CHARSET.charAt((int) ((timestamp >> (5 * i)) & 31)));
+        }
+        // Tag p, data length 52 (written as two 5-bit groups: 1, 20).
+        data.append('p').append(BECH32_CHARSET.charAt(1)).append(BECH32_CHARSET.charAt(20));
+        data.append(toBech32Chars(paymentHash));
+        for (int i = 0; i < SIGNATURE_CHARS; i++) {
             data.append(BECH32_CHARSET.charAt(SECURE_RANDOM.nextInt(BECH32_CHARSET.length())));
         }
 
@@ -324,8 +347,165 @@ public class MockLnServer {
         return chk;
     }
 
+    /**
+     * Handles /decodeinvoice in phoenixd's shape, including {@code paymentHash}.
+     *
+     * <p>payment-adapter 0.17.2 and later decodes a RECEIVE quote's invoice to get the hash it
+     * then looks up under /payments/incoming. Without the hash every lookup failed and the mint
+     * answered 500 (phoenixd-java#67). The hash is, in order: the one this mock issued with the
+     * invoice, the one in the invoice's {@code p} field, or a SHA-256 of the invoice text, so
+     * the same string always decodes to the same hash.
+     *
+     * <p>{@code amount} and {@code description} keep their old fixed values so existing callers
+     * see no change.
+     */
     private void handleDecodeInvoice(HttpExchange exchange) throws IOException {
-        writeJson(exchange, "{\"amount\":1000,\"description\":\"1 Blockaccino\"}");
+        String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+        String invoice = formParam(body, "invoice");
+        String paymentHash = decodePaymentHash(invoice);
+        writeJson(exchange, objectMapper.createObjectNode()
+                .put("chain", "mainnet")
+                .put("amount", 1000)
+                .put("paymentHash", paymentHash)
+                .put("description", "1 Blockaccino")
+                .put("minFinalCltvExpiryDelta", 18)
+                .put("timestampSeconds", System.currentTimeMillis() / 1000)
+                .toString());
+    }
+
+    /**
+     * Handles {@code GET /payments/incoming/{paymentHash}}, which payment-adapter calls with the
+     * hash from /decodeinvoice. Unknown hashes get 404, as from phoenixd.
+     */
+    private void handleGetIncomingPayment(HttpExchange exchange) throws IOException {
+        String path = exchange.getRequestURI().getPath();
+        String paymentHash = path.substring(path.lastIndexOf('/') + 1);
+        InvoiceInfo invoice = invoices.get(paymentHash);
+        if (invoice == null) {
+            writeJsonWithStatus(exchange, 404, "{\"error\":\"payment not found\"}");
+            return;
+        }
+        var json = objectMapper.createObjectNode()
+                .put("paymentHash", invoice.paymentHash)
+                .put("isPaid", invoice.settled)
+                .put("receivedSat", invoice.settled ? invoice.amountSat : 0)
+                .put("fees", 0)
+                .put("invoice", invoice.serialized)
+                .put("createdAt", System.currentTimeMillis());
+        if (invoice.externalId != null) {
+            json.put("externalId", invoice.externalId);
+        }
+        writeJson(exchange, json.toString());
+    }
+
+    /** The payment hash for a BOLT11 string: issued, then encoded, then a deterministic digest. */
+    String decodePaymentHash(String invoice) {
+        String text = invoice == null ? "" : invoice.trim();
+        for (InvoiceInfo info : invoices.values()) {
+            if (info.serialized.equalsIgnoreCase(text)) {
+                return info.paymentHash;
+            }
+        }
+        String fromInvoice = paymentHashFromBolt11(text);
+        if (fromInvoice != null) {
+            return fromInvoice;
+        }
+        try {
+            byte[] digest = MessageDigest.getInstance("SHA-256")
+                    .digest(text.toLowerCase().getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(digest);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    /**
+     * Reads the {@code p} (payment hash) tagged field out of a BOLT11 string, or null when the
+     * string is not a BOLT11 invoice or has no such field. The checksum is not verified.
+     */
+    static String paymentHashFromBolt11(String invoice) {
+        if (invoice == null) {
+            return null;
+        }
+        String text = invoice.toLowerCase();
+        int sep = text.lastIndexOf('1');
+        if (!text.startsWith("ln") || sep < 0) {
+            return null;
+        }
+        String data = text.substring(sep + 1);
+        // timestamp(7) ... tagged fields ... signature(104) checksum(6)
+        int end = data.length() - SIGNATURE_CHARS - 6;
+        int pos = 7;
+        while (pos + 3 <= end) {
+            int type = BECH32_CHARSET.indexOf(data.charAt(pos));
+            int hi = BECH32_CHARSET.indexOf(data.charAt(pos + 1));
+            int lo = BECH32_CHARSET.indexOf(data.charAt(pos + 2));
+            if (type < 0 || hi < 0 || lo < 0) {
+                return null;
+            }
+            int len = hi * 32 + lo;
+            pos += 3;
+            if (pos + len > end) {
+                return null;
+            }
+            if (data.charAt(pos - 3) == 'p' && len == 52) {
+                byte[] bytes = fromBech32Chars(data.substring(pos, pos + len));
+                return bytes == null ? null : HexFormat.of().formatHex(bytes, 0, 32);
+            }
+            pos += len;
+        }
+        return null;
+    }
+
+    private static String toBech32Chars(byte[] bytes) {
+        StringBuilder out = new StringBuilder();
+        int acc = 0;
+        int bits = 0;
+        for (byte b : bytes) {
+            acc = (acc << 8) | (b & 0xff);
+            bits += 8;
+            while (bits >= 5) {
+                bits -= 5;
+                out.append(BECH32_CHARSET.charAt((acc >> bits) & 31));
+            }
+        }
+        if (bits > 0) {
+            out.append(BECH32_CHARSET.charAt((acc << (5 - bits)) & 31));
+        }
+        return out.toString();
+    }
+
+    private static byte[] fromBech32Chars(String chars) {
+        byte[] out = new byte[chars.length() * 5 / 8];
+        int acc = 0;
+        int bits = 0;
+        int idx = 0;
+        for (int i = 0; i < chars.length(); i++) {
+            int v = BECH32_CHARSET.indexOf(chars.charAt(i));
+            if (v < 0) {
+                return null;
+            }
+            acc = (acc << 5) | v;
+            bits += 5;
+            if (bits >= 8) {
+                bits -= 8;
+                out[idx++] = (byte) ((acc >> bits) & 0xff);
+            }
+        }
+        return out;
+    }
+
+    private static String formParam(String body, String name) {
+        if (body == null) {
+            return null;
+        }
+        for (String param : body.split("&")) {
+            String[] pair = param.split("=", 2);
+            if (pair.length == 2 && name.equals(pair[0])) {
+                return java.net.URLDecoder.decode(pair[1], StandardCharsets.UTF_8);
+            }
+        }
+        return null;
     }
 
     /**

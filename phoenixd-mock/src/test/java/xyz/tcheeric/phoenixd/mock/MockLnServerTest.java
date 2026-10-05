@@ -187,6 +187,77 @@ class MockLnServerTest {
         assertThat(json.get("description").asText()).isEqualTo("1 Blockaccino");
     }
 
+    // An invoice this mock issued decodes to the payment hash it was issued with, which is
+    // what payment-adapter then looks up (phoenixd-java#67).
+    @Test
+    void decodeInvoiceReturnsTheIssuedPaymentHash() throws Exception {
+        JsonNode created = post("/createinvoice", "amountSat=21&externalId=quote-67");
+        String bolt11 = created.get("serialized").asText();
+        String issuedHash = created.get("paymentHash").asText();
+
+        JsonNode decoded = post("/decodeinvoice", "invoice=" + bolt11);
+
+        assertThat(issuedHash).matches("[0-9a-f]{64}");
+        assertThat(decoded.get("paymentHash").asText()).isEqualTo(issuedHash);
+    }
+
+    // A real BOLT11 invoice the mock never saw (the spec's first test vector) decodes to the
+    // payment hash written inside it.
+    @Test
+    void decodeInvoiceReadsThePaymentHashFromAForeignInvoice() throws Exception {
+        String specVector = "lnbc1pvjluezsp5zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zyg3zygspp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqdpl2pkx2ctnv5sxxmmwwd5kgetjypeh2ursdae8g6twvus8g6rfwvs8qun0dfjkxaq9qrsgq357wnc5r2ueh7ck6q93dj32dlqnls087fxdwk8qakdyafkq3yap9us6v52vjjsrvywa6rt52cm9r9zqt8r2t7mlcwspyetp5h2tztugp9lfyql";
+
+        JsonNode decoded = post("/decodeinvoice", "invoice=" + specVector);
+
+        assertThat(decoded.get("paymentHash").asText())
+                .isEqualTo("0001020304050607080900010203040506070809000102030405060708090102");
+    }
+
+    // A string that is not a decodable invoice still gets a payment hash, and always the same
+    // one, so lookups never fail for want of a hash.
+    @Test
+    void decodeInvoiceGivesUnknownStringsADeterministicHash() throws Exception {
+        String first = post("/decodeinvoice", "invoice=lnbc10n...").get("paymentHash").asText();
+        String second = post("/decodeinvoice", "invoice=lnbc10n...").get("paymentHash").asText();
+
+        assertThat(first).matches("[0-9a-f]{64}").isEqualTo(second);
+    }
+
+    // The decoded hash leads to /payments/incoming, which reports whether it was paid: unpaid
+    // at first, paid with the amount after /mockpay. This is payment-adapter's lookup path.
+    @Test
+    void decodedHashLooksUpTheIncomingPayment() throws Exception {
+        JsonNode created = post("/createinvoice", "amountSat=42&externalId=quote-67b");
+        String hash = post("/decodeinvoice", "invoice=" + created.get("serialized").asText())
+                .get("paymentHash").asText();
+
+        HttpResponse<String> incoming = get("/payments/incoming/" + hash);
+        HttpResponse<String> unknown = get("/payments/incoming/" + "0".repeat(64));
+
+        assertThat(incoming.statusCode()).isEqualTo(200);
+        JsonNode json = objectMapper.readTree(incoming.body());
+        assertThat(json.get("paymentHash").asText()).isEqualTo(hash);
+        assertThat(json.get("externalId").asText()).isEqualTo("quote-67b");
+        assertThat(json.has("isPaid")).isTrue();
+        assertThat(unknown.statusCode()).isEqualTo(404);
+    }
+
+    private JsonNode post(String path, String form) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + path))
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .POST(HttpRequest.BodyPublishers.ofString(form))
+                .build();
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        assertThat(response.statusCode()).isEqualTo(200);
+        return objectMapper.readTree(response.body());
+    }
+
+    private HttpResponse<String> get(String path) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder().uri(URI.create(BASE_URL + path)).GET().build();
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+    }
+
     @Test
     void shouldPayInvoice() throws Exception {
         // Act
