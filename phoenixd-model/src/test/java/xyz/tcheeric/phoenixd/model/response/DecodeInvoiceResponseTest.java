@@ -1,5 +1,6 @@
 package xyz.tcheeric.phoenixd.model.response;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -58,5 +59,18 @@ class DecodeInvoiceResponseTest {
 
         assertThat(response.toString()).contains("amount=1", "description=desc", "chain=chain", "paymentMetadata=null");
     }
-}
 
+    // phoenixd's /decodeinvoice JSON carries paymentHash, and the client must keep it:
+    // payment-adapter looks the payment up by it. It used to be @JsonIgnore'd, so it read null
+    // (phoenixd-java#67). Fields the class does not model must not break decoding either.
+    @Test
+    void deserializesPaymentHashFromPhoenixdJson() throws Exception {
+        String json = "{\"chain\":\"mainnet\",\"amount\":1000,\"paymentHash\":\"ab12\","
+                + "\"description\":\"x\",\"someNewField\":true}";
+
+        DecodeInvoiceResponse response = new ObjectMapper().readValue(json, DecodeInvoiceResponse.class);
+
+        assertThat(response.getPaymentHash()).isEqualTo("ab12");
+        assertThat(response.getAmount()).isEqualTo(1000);
+    }
+}
