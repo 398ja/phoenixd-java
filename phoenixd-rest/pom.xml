@@ -88,11 +88,8 @@
                         <image>gcr.io/distroless/java21</image>
                     </from>
                     <to>
-                        <image>docker.398ja.xyz/phoenixd-rest</image>
-                        <tags>
-                            <tag>${project.version}</tag>
-                            <tag>latest</tag>
-                        </tags>
+                        <!-- Release pushes ONLY the version tag. Never :latest (staging pulls it). -->
+                        <image>docker.398ja.xyz/phoenixd-rest:${project.version}</image>
                     </to>
                     <containerizingMode>packaged</containerizingMode>
                     <container>
